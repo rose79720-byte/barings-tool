@@ -1032,7 +1032,24 @@ async function downloadJPG() {
       ? document.getElementById('poster-starlight')
       : document.getElementById('poster');
     const c = await html2canvas(posterEl, {
-      width:1024, height:1024, scale:1, useCORS:true, allowTaint:true, backgroundColor:null, logging:false
+      width:1024, height:1024, scale:2, useCORS:true, allowTaint:true, backgroundColor:null, logging:false,
+      onclone: (clonedDoc) => {
+        [
+          ['.date-big',        '#2a3556'],
+          ['.fund-rate',       '#2a3556'],
+          ['.night-date-big',  '#e8c275'],
+          ['.night-fund-rate', '#e8c275'],
+        ].forEach(([sel, col]) => {
+          clonedDoc.querySelectorAll(sel).forEach(n => {
+            n.style.backgroundClip       = 'initial';
+            n.style.webkitBackgroundClip = 'initial';
+            n.style.webkitTextFillColor  = col;
+            n.style.color      = col;
+            n.style.background = 'none';
+            n.style.filter     = 'none';
+          });
+        });
+      }
     });
     const out = document.createElement('canvas');
     out.width = 1080; out.height = 1080;
@@ -1040,7 +1057,7 @@ async function downloadJPG() {
     const a = document.createElement('a');
     const dt = document.getElementById('inDate')?.value?.replace('/','') || 'poster';
     a.download = `霸菱${MATERIALS[APP.material].name}_${dt}.jpg`;
-    a.href = out.toDataURL('image/jpeg', 0.85);
+    a.href = out.toDataURL('image/jpeg', 0.92);
     a.click();
     toast('✅ JPG 已下載');
   } catch(e) { toast('❌ 產圖失敗') }
