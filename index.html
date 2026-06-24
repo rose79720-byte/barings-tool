@@ -1049,6 +1049,23 @@ async function downloadJPG() {
             n.style.filter     = 'none';
           });
         });
+        // Fix night logo: html2canvas 不支援 filter，手動用 canvas 轉白
+        const nightLogo = clonedDoc.querySelector('.night-logo');
+        if (nightLogo) {
+          const origLogo = document.querySelector('.night-logo');
+          if (origLogo && origLogo.complete && origLogo.naturalWidth) {
+            const cv = document.createElement('canvas');
+            cv.width  = origLogo.naturalWidth;
+            cv.height = origLogo.naturalHeight;
+            const ctx = cv.getContext('2d');
+            ctx.drawImage(origLogo, 0, 0);
+            ctx.globalCompositeOperation = 'source-in';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, cv.width, cv.height);
+            nightLogo.src = cv.toDataURL('image/png');
+          }
+          nightLogo.style.filter = 'none';
+        }
       }
     });
     const out = document.createElement('canvas');
