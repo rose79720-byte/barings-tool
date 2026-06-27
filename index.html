@@ -413,6 +413,8 @@ async function bootstrap() {
   MOD.renderMsg(document.getElementById('msgSection'));
   MOD.showPoster(APP.template);
   scalePoster();
+  // 頁面載入即預載素材字型，確保 html2canvas 下載時可用
+  if (MOD.FONTS) { try { await Promise.all(MOD.FONTS.map(f => document.fonts.load(f))); } catch(e) {} }
   await init();
 }
 
