@@ -1,0 +1,26 @@
+{
+  "materials": {
+    "dividend": {
+      "name": "配息提醒",
+      "icon": "📅",
+      "autoFetch": true,
+      "defaultTpl": "dawn",
+      "templates": [
+        { "key": "dawn",      "label": "🌅 晨曦初昇", "available": true },
+        { "key": "starlight", "label": "🌙 夜空星光", "available": true },
+        { "key": "rosemist",  "label": "🌸 玫瑰晨霧", "available": true }
+      ]
+    },
+    "bankTable": {
+      "name": "銀行基金資訊表",
+      "icon": "🏦",
+      "autoFetch": false,
+      "defaultTpl": "wip",
+      "templates": [
+        { "key": "fubon",  "label": "🏛 富邦", "available": false },
+        { "key": "tashin", "label": "🏦 台新", "available": false },
+        { "key": "wip",    "label": "🔧 開發中", "available": false }
+      ]
+    }
+  }
+}
