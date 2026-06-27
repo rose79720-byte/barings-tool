@@ -337,16 +337,19 @@ async function downloadJPG() {
     const posterEl = MOD.getActivePosterEl(APP.template);
     if (!posterEl) { toast('⚠️ 版型開發中，尚無法下載'); return; }
     const c = await html2canvas(posterEl, {
-      width:1024, height:1024, scale:2, useCORS:true, allowTaint:true,
+      width:1024, height:1024, scale:3, useCORS:true, allowTaint:true,
       backgroundColor:null, logging:false,
       onclone: (doc) => MOD.onDownloadClone(doc, APP.template),
     });
     const out = document.createElement('canvas');
     out.width = 1080; out.height = 1080;
-    out.getContext('2d').drawImage(c, 0, 0, 1080, 1080);
+    const ctx = out.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(c, 0, 0, 1080, 1080);
     const a = document.createElement('a');
     a.download = MOD.getDownloadFileName(APP);
-    a.href = out.toDataURL('image/jpeg', 0.92);
+    a.href = out.toDataURL('image/jpeg', 0.95);
     a.click();
     toast('✅ JPG 已下載');
   } catch(e) { toast('❌ 產圖失敗'); }
