@@ -215,7 +215,7 @@ export const CSS = `
     linear-gradient(180deg,#f9f6f4 0%, #f5f1ef 100%);
   box-shadow:0 18px 45px rgba(0,0,0,.12);
   isolation:isolate;
-  display:none; flex-shrink:0;
+  flex-shrink:0;
 }
 
     
@@ -771,13 +771,13 @@ export function showPoster(tplKey) {
     if (el) el.style.display = 'none';
   });
   if (tplKey === 'starlight') {
-    document.getElementById('poster-starlight').style.display = '';
+    document.getElementById('poster-starlight').style.display = 'block';
   } else if (tplKey === 'rosemist') {
     const el = document.getElementById('poster-rosemist');
-    if (el) el.style.display = '';
+    if (el) el.style.display = 'block';
     _initStars();
   } else {
-    document.getElementById('poster').style.display = '';
+    document.getElementById('poster').style.display = 'block';
   }
 }
 
