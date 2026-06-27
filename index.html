@@ -342,11 +342,23 @@ async function downloadJPG() {
     await document.fonts.ready;
     const posterEl = MOD.getActivePosterEl(APP.template);
     if (!posterEl) { toast('⚠️ 版型開發中，尚無法下載'); return; }
-    const c = await html2canvas(posterEl, {
-      width:1024, height:1024, scale:3, useCORS:true, allowTaint:true,
-      backgroundColor:null, logging:false,
-      onclone: (doc) => MOD.onDownloadClone(doc, APP.template),
-    });
+    // 截圖前還原預覽縮放（祖先 transform:scale 會讓 html2canvas 截圖糊掉）
+    const wrap = document.getElementById('scaleWrap');
+    const prevTransform = wrap.style.transform;
+    const prevMargin    = wrap.style.marginBottom;
+    wrap.style.transform = 'none';
+    wrap.style.marginBottom = '0px';
+    let c;
+    try {
+      c = await html2canvas(posterEl, {
+        width:1024, height:1024, scale:2, useCORS:true, allowTaint:true,
+        backgroundColor:null, logging:false,
+        onclone: (doc) => MOD.onDownloadClone(doc, APP.template),
+      });
+    } finally {
+      wrap.style.transform = prevTransform;
+      wrap.style.marginBottom = prevMargin;
+    }
     const out = document.createElement('canvas');
     out.width = 1080; out.height = 1080;
     const ctx = out.getContext('2d');
