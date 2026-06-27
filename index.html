@@ -129,6 +129,22 @@ body{font-family:'Noto Sans TC',sans-serif;background:#eef0f5;min-height:100vh;-
 
 </style>
 <style id="posterStyle">/* 素材版型 CSS（載入後動態注入）*/</style>
+
+<!-- ============================================================
+     適應式版面（Adaptive）— 依螢幕寬度切換手機/電腦兩套設計
+     JS 會在 <body> 加上 .layout-mobile 或 .layout-desktop
+     斷點：760px（可在下方 JS 的 MOBILE_QUERY 調整）
+     ─────────────────────────────────────────────────────────
+     目前兩套皆為空，沿用上方既有樣式 → 電腦版維持原樣、不影響運作。
+     之後把兩套 layout 的 CSS 分別貼進對應區塊即可。
+     ============================================================ -->
+<style id="layoutStyle">
+/* ===== 電腦版專屬版面（待補）===== */
+/* .layout-desktop .page { ... } */
+
+/* ===== 手機版專屬版面（待補）===== */
+/* .layout-mobile .page { ... } */
+</style>
 </head>
 <body>
 
@@ -430,8 +446,21 @@ async function bootstrap() {
   await init();
 }
 
+// ============================================================
+// 適應式版面切換（依螢幕寬度選手機/電腦版）
+// ============================================================
+const MOBILE_QUERY = window.matchMedia('(max-width: 760px)');
+function pickLayout() {
+  const isMobile = MOBILE_QUERY.matches;
+  document.body.classList.toggle('layout-mobile',  isMobile);
+  document.body.classList.toggle('layout-desktop', !isMobile);
+  scalePoster();  // 版面切換後重算海報縮放
+}
+// 視窗縮放 / 手機轉向時即時重選（若只想開啟當下決定一次，移除這行）
+MOBILE_QUERY.addEventListener('change', pickLayout);
+
 window.addEventListener('resize', scalePoster);
-window.addEventListener('load', bootstrap);
+window.addEventListener('load', () => { pickLayout(); bootstrap(); });
 </script>
 </body>
 </html>
