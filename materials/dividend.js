@@ -330,6 +330,7 @@ export const CSS = `
       line-height:.9;
       font-weight:600;
       letter-spacing:-8px;
+      font-variant-numeric:lining-nums proportional-nums;
       text-shadow:0 2px 0 rgba(255,255,255,.42);
       white-space:nowrap;
     }
@@ -425,6 +426,7 @@ export const CSS = `
       line-height:.95;
       font-weight:600;
       letter-spacing:-5px;
+      font-variant-numeric:lining-nums proportional-nums;
       white-space:nowrap;
     }
 #poster-rosemist .rate .pct{font-size:.62em; margin-left:2px}

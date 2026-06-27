@@ -190,7 +190,7 @@ let MOD      = null;   // 目前載入的素材模組
 // 載入 manifest.json
 // ============================================================
 async function loadManifest() {
-  const r = await fetch('./manifest.json');
+  const r = await fetch('./manifest.json?t=' + Date.now());
   MANIFEST = (await r.json()).materials;
 }
 
@@ -198,7 +198,8 @@ async function loadManifest() {
 // 載入素材模組（動態 import）
 // ============================================================
 async function loadMaterial(key) {
-  MOD = await import(`./materials/${key}.js`);
+  // 加上時間戳避免瀏覽器快取舊版模組（檔案僅數十 KB，重抓成本極低）
+  MOD = await import(`./materials/${key}.js?t=${Date.now()}`);
 
   // 注入版型 CSS
   document.getElementById('posterStyle').textContent = MOD.CSS;
