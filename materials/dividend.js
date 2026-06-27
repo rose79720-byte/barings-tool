@@ -3,6 +3,14 @@
 // 新增版型：在 CSS / HTML 兩處加入對應內容，並更新 manifest.json
 // ============================================================
 
+// 下載前需確保載入的字型（html2canvas 截圖前強制 load，避免退回系統字型）
+// 格式：'<weight> <size>px "<family>"'，size 僅供查詢、實際載入整套字型
+export const FONTS = [
+  '700 224px "Fraunces"',             // 晨曦 日期/配息率
+  '600 238px "Cormorant Garamond"',   // 夜空 日期/配息率
+  '600 230px "Playfair Display"',     // 玫瑰 日期/配息率
+];
+
 export const CSS = `
 /* --- Dawn theme --- */
 .sky{position:absolute;inset:0;background:linear-gradient(180deg,#8aa4d4 0%,#b0c0dc 18%,#d8c8d4 35%,#f0d4c0 52%,#fde0b4 65%,#fff0d4 78%,#fff8e6 90%,#fffaf0 100%)}

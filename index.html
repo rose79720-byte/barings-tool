@@ -335,6 +335,10 @@ async function downloadJPG() {
   const btn = document.getElementById('btnDl');
   btn.disabled = true; btn.textContent = '⏳ 產圖中…';
   try {
+    // 明確強制載入該素材用到的字型，避免 html2canvas 退回系統襯線體
+    if (MOD.FONTS) {
+      try { await Promise.all(MOD.FONTS.map(f => document.fonts.load(f))); } catch(e) {}
+    }
     await document.fonts.ready;
     const posterEl = MOD.getActivePosterEl(APP.template);
     if (!posterEl) { toast('⚠️ 版型開發中，尚無法下載'); return; }
