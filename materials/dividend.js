@@ -786,11 +786,12 @@ export function showPoster(tplKey) {
 // ============================================================
 export function onDownloadClone(doc, tplKey) {
   // 修正漸層文字（html2canvas 不支援 background-clip: text）
+  // 注意：.date-big 限定在 #poster（晨曦），避免影響玫瑰版同名 class
   [
-    ['.date-big',        '#2a3556'],
-    ['.fund-rate',       '#2a3556'],
-    ['.night-date-big',  '#e8c275'],
-    ['.night-fund-rate', '#e8c275'],
+    ['#poster .date-big',    '#2a3556'],
+    ['#poster .fund-rate',   '#2a3556'],
+    ['.night-date-big',      '#e8c275'],
+    ['.night-fund-rate',     '#e8c275'],
   ].forEach(([sel, col]) => {
     doc.querySelectorAll(sel).forEach(n => {
       n.style.backgroundClip       = 'initial';
@@ -812,6 +813,11 @@ export function onDownloadClone(doc, tplKey) {
     el.style.backdropFilter       = 'none';
     el.style.webkitBackdropFilter = 'none';
     el.style.background           = 'rgba(255,255,255,0.10)';
+  });
+  doc.querySelectorAll('#poster-rosemist .card').forEach(el => {
+    el.style.backdropFilter       = 'none';
+    el.style.webkitBackdropFilter = 'none';
+    el.style.background           = 'rgba(255,251,250,0.95)';
   });
 
   // 修正夜空 Logo（html2canvas 不支援 CSS filter，用 canvas 手動轉白）
