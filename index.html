@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>霸菱配息素材產生器</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* ===== Reset & Base ===== */
@@ -42,6 +43,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:#eef0f5;min-height:100vh;-
 .tpl-btn[data-tpl="dawn"].active{background:linear-gradient(135deg,#1a2a52 0%,#3a4f8e 50%,#a85a4a 100%);color:#fff;box-shadow:0 6px 18px rgba(26,42,82,.35)}
 .tpl-btn[data-tpl="starlight"]{background:linear-gradient(135deg,#1a3a8f 0%,#0d1b4b 100%);color:#e8c275}
 .tpl-btn[data-tpl="starlight"].active{background:linear-gradient(135deg,#0d1b4b 0%,#1a3a8f 100%);color:#e8c275;box-shadow:0 6px 18px rgba(13,27,75,.4),inset 0 0 0 2px #e8c275}
+.tpl-btn[data-tpl="rosemist"]{background:linear-gradient(135deg,#f5e6e1 0%,#f0d8d2 100%);color:#c98476}
+.tpl-btn[data-tpl="rosemist"].active{background:linear-gradient(135deg,#c98476 0%,#e6b2a8 100%);color:#fff;box-shadow:0 6px 18px rgba(201,132,118,.35)}
 .tpl-btn[data-tpl="coming2"]{background:linear-gradient(135deg,#fce4ec,#f8bbd0);color:#ad1457}
 .tpl-btn[data-tpl="coming3"]{background:linear-gradient(135deg,#eceff1,#cfd8dc);color:#37474f}
 .tpl-btn.coming{opacity:.55;cursor:not-allowed}
@@ -280,6 +283,297 @@ body{font-family:'Noto Sans TC',sans-serif;background:#eef0f5;min-height:100vh;-
 .wip-sub{color:rgba(232,194,117,.55);font-size:16px;letter-spacing:3px;font-family:'Noto Sans TC',sans-serif}
 .wip-badge{background:rgba(232,194,117,.12);border:1px solid rgba(232,194,117,.3);color:rgba(232,194,117,.8);padding:9px 24px;border-radius:100px;font-size:13px;font-family:'Noto Sans TC',sans-serif;letter-spacing:2px;margin-top:8px}
 
+
+<style>
+/* Screenshot-matched option 1: elegant Garamond-style numerals */
+.night-date-big {
+  font-family: 'Cormorant Garamond','EB Garamond','Garamond','Times New Roman',serif !important;
+  font-size: 238px !important;
+  font-weight: 600 !important;
+  line-height: 0.84 !important;
+  letter-spacing: -8px !important;
+  font-variant-numeric: lining-nums proportional-nums !important;
+}
+.night-date-big .slash {
+  font-family: 'Cormorant Garamond','EB Garamond','Garamond','Times New Roman',serif !important;
+  font-size: 196px !important;
+  font-weight: 500 !important;
+  font-style: italic !important;
+  margin: 0 8px !important;
+}
+.night-fund-rate {
+  font-family: 'Cormorant Garamond','EB Garamond','Garamond','Times New Roman',serif !important;
+  font-size: 96px !important;
+  font-weight: 600 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -3px !important;
+  font-variant-numeric: lining-nums proportional-nums !important;
+}
+.night-fund-rate .pct {
+  font-family: 'Cormorant Garamond','EB Garamond','Garamond','Times New Roman',serif !important;
+  font-size: 46px !important;
+  font-weight: 600 !important;
+  margin-left: 4px !important;
+}
+</style>
+/* ===== 柔霧晨光版型 ===== */
+#poster-rosemist {
+  --bg:#f7f3f1;
+      --blush:#f0d8d2;
+      --blush-2:#f5e6e1;
+      --rose:#d89c8f;
+      --rose-deep:#c98476;
+      --rose-soft:#e6b2a8;
+      --ink:#353535;
+      --muted:#756f6c;
+      --line:#ecd6d0;
+      --shadow:0 18px 32px rgba(205,170,160,.14);
+      --navy:#173a72;
+      --green:#2fb65e;
+  width:1024px; height:1024px; position:relative; overflow:hidden;
+  background:
+    radial-gradient(circle at 14% 36%, rgba(240,216,210,.58) 0, rgba(240,216,210,.58) 15%, rgba(240,216,210,0) 34%),
+    radial-gradient(circle at 88% 23%, rgba(245,230,225,.8) 0, rgba(245,230,225,.8) 11%, rgba(245,230,225,0) 28%),
+    linear-gradient(180deg,#f9f6f4 0%, #f5f1ef 100%);
+  box-shadow:0 18px 45px rgba(0,0,0,.12);
+  isolation:isolate;
+  display:none; flex-shrink:0;
+}
+
+    
+    *{box-sizing:border-box}
+    
+#poster-rosemist{
+      width:1024px;
+      height:1024px;
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 14% 36%, rgba(240,216,210,.58) 0, rgba(240,216,210,.58) 15%, rgba(240,216,210,0) 34%),
+        radial-gradient(circle at 88% 23%, rgba(245,230,225,.8) 0, rgba(245,230,225,.8) 11%, rgba(245,230,225,0) 28%),
+        linear-gradient(180deg,#f9f6f4 0%, #f5f1ef 100%);
+      box-shadow:0 18px 45px rgba(0,0,0,.12);
+      isolation:isolate;
+    }
+    .poster:before,
+#poster-rosemist:after{
+      content:"";
+      position:absolute;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:0;
+    }
+#poster-rosemist:before{
+      width:620px;height:620px;
+      left:-220px;bottom:-110px;
+      background:radial-gradient(circle at 62% 38%, rgba(240,214,209,.85), rgba(240,214,209,.18) 55%, rgba(240,214,209,0) 70%);
+    }
+#poster-rosemist:after{
+      width:440px;height:440px;
+      right:-150px;top:-120px;
+      background:radial-gradient(circle at 40% 60%, rgba(246,233,229,.86), rgba(246,233,229,.20) 58%, rgba(246,233,229,0) 76%);
+    }
+    .curve-left,
+#poster-rosemist .curve-right{
+      position:absolute;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.55);
+      z-index:0;
+      pointer-events:none;
+      filter:drop-shadow(0 0 12px rgba(255,255,255,.28));
+    }
+#poster-rosemist .curve-left{width:760px;height:760px;left:-440px;bottom:-210px}
+#poster-rosemist .curve-right{width:500px;height:500px;right:-270px;top:-150px}
+#poster-rosemist .sparkle{
+      position:absolute;
+      width:64px;height:64px;
+      right:92px;top:265px;
+      opacity:.92;
+      z-index:1;
+    }
+#poster-rosemist .content{
+      position:relative;
+      z-index:2;
+      height:100%;
+      padding:52px 64px 42px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+#poster-rosemist .logo-wrap{ text-align:center; }
+#poster-rosemist .logo{
+      font-family:'Cormorant Garamond',serif;
+      color:var(--navy);
+      font-size:86px;
+      line-height:1;
+      font-weight:600;
+      letter-spacing:1px;
+      margin:0;
+    }
+#poster-rosemist .logo-line{
+      width:192px;
+      height:6px;
+      margin:6px auto 0;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--green) 0 30%, var(--navy) 30% 100%);
+      box-shadow:0 1px 0 rgba(255,255,255,.5);
+    }
+#poster-rosemist .month-pill{
+      margin-top:34px;
+      padding:12px 42px;
+      border-radius:999px;
+      background:linear-gradient(180deg,#efb5a8 0%, #e9a89b 100%);
+      color:#fff;
+      font-size:28px;
+      font-weight:500;
+      letter-spacing:3px;
+      line-height:1;
+      box-shadow:0 10px 20px rgba(225,172,158,.18), inset 0 1px 0 rgba(255,255,255,.38);
+    }
+#poster-rosemist .label-row{
+      margin-top:44px;
+      display:flex;
+      align-items:center;
+      gap:24px;
+      color:var(--rose-deep);
+    }
+    .label-row:before,
+#poster-rosemist .label-row:after{
+      content:"";
+      width:92px;
+      height:1px;
+      background:linear-gradient(90deg, rgba(236,214,208,0) 0%, rgba(236,214,208,1) 100%);
+    }
+#poster-rosemist .label-row:after{
+      background:linear-gradient(90deg, rgba(236,214,208,1) 0%, rgba(236,214,208,0) 100%);
+    }
+#poster-rosemist .label-row .diamond{
+      width:6px;height:6px;border-radius:2px;background:var(--rose-soft);transform:rotate(45deg);
+    }
+#poster-rosemist .label-text{
+      font-family:'Cormorant Garamond',serif;
+      font-size:34px;
+      letter-spacing:12px;
+      margin-left:12px;
+    }
+#poster-rosemist .date-block{
+      margin-top:10px;
+      text-align:center;
+      position:relative;
+    }
+#poster-rosemist .date-big{
+      font-family:'Cormorant Garamond',serif;
+      color:var(--rose-deep);
+      font-size:255px;
+      line-height:.9;
+      font-weight:600;
+      letter-spacing:-8px;
+      text-shadow:0 2px 0 rgba(255,255,255,.42);
+      white-space:nowrap;
+    }
+#poster-rosemist .date-big .slash{
+      font-size:.86em;
+      font-weight:500;
+      font-style:italic;
+      margin:0 12px;
+      opacity:.92;
+    }
+#poster-rosemist .weekday{
+      margin-top:16px;
+      color:var(--rose-deep);
+      font-size:42px;
+      font-weight:900;
+      letter-spacing:12px;
+      line-height:1;
+      padding-left:12px;
+    }
+#poster-rosemist .cards{
+      width:100%;
+      margin-top:auto;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:36px;
+      align-items:end;
+      padding:0 10px 18px;
+    }
+#poster-rosemist .card{
+      position:relative;
+      min-height:322px;
+      background:linear-gradient(180deg, rgba(255,255,255,.62) 0%, rgba(250,245,243,.96) 100%);
+      border-radius:30px;
+      border:1.5px solid rgba(255,255,255,.72);
+      box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.92);
+      padding:68px 34px 28px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+      align-items:center;
+      backdrop-filter: blur(4px);
+      text-align:center;
+    }
+#poster-rosemist .card:before{
+      content:"";
+      position:absolute;
+      left:50%; top:0;
+      transform:translate(-50%,-50%);
+      width:76px;height:76px;
+      border-radius:50%;
+      background:linear-gradient(180deg,#efbcae 0%, #e6a493 100%);
+      box-shadow:0 8px 16px rgba(214,161,147,.18), inset 0 1px 0 rgba(255,255,255,.6);
+      border:4px solid rgba(255,255,255,.92);
+    }
+#poster-rosemist .icon{
+      position:absolute;
+      left:50%; top:0;
+      transform:translate(-50%,-50%);
+      width:76px;height:76px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      z-index:2;
+    }
+#poster-rosemist .icon svg{width:34px;height:34px;display:block}
+#poster-rosemist .fund-name{
+      font-size:28px;
+      font-weight:900;
+      color:#333;
+      line-height:1.35;
+      letter-spacing:2px;
+      white-space:nowrap;
+    }
+#poster-rosemist .fund-divider{
+      width:64px;height:2px;border-radius:2px;
+      background:linear-gradient(90deg, rgba(217,151,139,.18), rgba(217,151,139,.82), rgba(217,151,139,.18));
+      margin:18px auto 16px;
+    }
+#poster-rosemist .fund-sub{
+      color:var(--rose-deep);
+      font-size:24px;
+      font-weight:500;
+      letter-spacing:8px;
+      padding-left:8px;
+      margin-bottom:10px;
+    }
+#poster-rosemist .rate{
+      margin-top:auto;
+      font-family:'Cormorant Garamond',serif;
+      color:var(--rose-deep);
+      font-size:110px;
+      line-height:.95;
+      font-weight:600;
+      letter-spacing:-5px;
+      white-space:nowrap;
+    }
+#poster-rosemist .rate .pct{font-size:.62em; margin-left:2px}
+#poster-rosemist .footer-line{
+      position:absolute;
+      left:0;right:0;bottom:56px;
+      height:1px;
+      background:linear-gradient(90deg, rgba(224,191,183,.62) 0%, rgba(224,191,183,0) 12%, rgba(224,191,183,0) 88%, rgba(224,191,183,.62) 100%);
+      z-index:1;
+    }
+  
 </style>
 </head>
 <body>
@@ -439,6 +733,68 @@ body{font-family:'Noto Sans TC',sans-serif;background:#eef0f5;min-height:100vh;-
           </div>
         </div>
         </div><!-- /#scaleWrap (starlight close) -->
+</body>
+</html>
+        </div><!-- /#scaleWrap (starlight close) -->
+        <div id="poster-rosemist">
+    <div class="curve-left"></div>
+    <div class="curve-right"></div>
+    <svg class="sparkle" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M32 6L35.7 28.3L58 32L35.7 35.7L32 58L28.3 35.7L6 32L28.3 28.3L32 6Z" fill="rgba(255,255,255,.7)"/>
+      <path d="M32 14L34.5 29.5L50 32L34.5 34.5L32 50L29.5 34.5L14 32L29.5 29.5L32 14Z" fill="rgba(255,255,255,.95)"/>
+    </svg>
+
+    <div class="content">
+      <div class="logo-wrap">
+        <h1 class="logo">BARINGS</h1>
+        <div class="logo-line"></div>
+      </div>
+
+      <div class="month-pill" id="rmMonthLabel">MAY • 2026</div>
+
+      <div class="label-row">
+        <span class="diamond"></span>
+        <div class="label-text">配 息 基 準 日</div>
+        <span class="diamond"></span>
+      </div>
+
+      <div class="date-block">
+        <div class="date-big"><span id="rmDateNum">5</span><span class="slash">/</span><span id="rmDateNum2">29</span></div>
+        <div class="weekday" id="rmWeekday">星 期 五</div>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 3.5L18 6V11.5C18 15.2 15.8 18.2 12 20C8.2 18.2 6 15.2 6 11.5V6L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M9.3 11.8L11.2 13.7L14.9 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="fund-name">霸菱優先順位資產抵押債基金</div>
+          <div class="fund-divider"></div>
+          <div class="fund-sub">年化配息率約</div>
+          <div class="rate"><span id="rmRate1">10.4</span><span class="pct">%</span></div>
+        </div>
+
+        <div class="card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M4 12H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M12 4C14.5 6.2 16 9 16 12C16 15 14.5 17.8 12 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M12 4C9.5 6.2 8 9 8 12C8 15 9.5 17.8 12 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="fund-name">霸菱環球非投資等級債基金</div>
+          <div class="fund-divider"></div>
+          <div class="fund-sub">年化配息率約</div>
+          <div class="rate"><span id="rmRate2">11.2</span><span class="pct">%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-line"></div>
+  </div>
         <!-- WIP poster -->
         <div id="poster-wip" style="display:none;">
           <div class="wip-icon">🏗️</div>
@@ -792,7 +1148,7 @@ function updateBankMsg(channel) {
 // POSTER 顯示切換
 // ============================================================
 function showPosterEl(tplKey) {
-  ['poster', 'poster-starlight', 'poster-wip', 'poster-fubon', 'poster-tashin'].forEach(id => {
+  ['poster', 'poster-starlight', 'poster-rosemist', 'poster-wip', 'poster-fubon', 'poster-tashin'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -800,6 +1156,8 @@ function showPosterEl(tplKey) {
     document.getElementById('poster').style.display = '';
   } else if (tplKey === 'starlight') {
     document.getElementById('poster-starlight').style.display = '';
+  } else if (tplKey === 'rosemist') {
+    document.getElementById('poster-rosemist').style.display = '';
     initStars();
   } else if (tplKey === 'fubon') {
     const el = document.getElementById('poster-fubon');
@@ -997,7 +1355,14 @@ function updatePoster() {
   set('nR1', r1);
   set('nR2', r2);
 
-  updateMsg(MZH[mi]||'?', date, wd, r1, r2);
+  // Rose Mist 版型
+  set('rmMonthLabel', (MEN[mi]||'???') + ' · ' + yr);
+  set('rmDateNum',  parts[0] || '?');
+  set('rmDateNum2', day);
+  set('rmWeekday', '星 期 ' + wd);
+  set('rmRate1', r1);
+  set('rmRate2', r2);
+    updateMsg(MZH[mi]||'?', date, wd, r1, r2);
   document.getElementById('btnDl').disabled = false;
 }
 
@@ -1030,6 +1395,8 @@ async function downloadJPG() {
   try {
     const posterEl = APP.template === 'starlight'
       ? document.getElementById('poster-starlight')
+      : APP.template === 'rosemist'
+      ? document.getElementById('poster-rosemist')
       : document.getElementById('poster');
     const c = await html2canvas(posterEl, {
       width:1024, height:1024, scale:2, useCORS:true, allowTaint:true, backgroundColor:null, logging:false,
