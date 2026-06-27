@@ -280,9 +280,11 @@ function selectTpl(tplKey) {
   APP.template = tplKey;
   document.querySelectorAll('.tpl-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.tpl === tplKey));
-  if (MOD) MOD.showPoster(tplKey);
-  scalePoster();
-  updatePoster();
+  requestAnimationFrame(() => {
+    if (MOD) MOD.showPoster(tplKey);
+    scalePoster();
+    updatePoster();
+  });
 }
 
 // ============================================================

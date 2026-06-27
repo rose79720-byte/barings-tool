@@ -567,7 +567,7 @@ export const HTML = `
           </div>
         </div>
 
-        <div id="poster-rosemist">
+        <div id="poster-rosemist" style="display:none;width:1024px;height:1024px;position:relative;overflow:hidden;flex-shrink:0;">
     <div class="curve-left"></div>
     <div class="curve-right"></div>
     <svg class="sparkle" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
