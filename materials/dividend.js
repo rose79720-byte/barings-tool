@@ -633,50 +633,45 @@ const MEN = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','
 // 渲染表單欄位
 // ============================================================
 export function renderFields(container) {
-  container.innerHTML = `
-    <div class="data-card">
-      <div class="data-row">
-        <span class="data-label">配息基準日</span>
-        <div>
-          <input class="data-input" id="inDate" value="讀取中…"
-            oninput="updatePoster()" style="width:120px">
-        </div>
-      </div>
-      <div class="data-row">
-        <span class="data-label">星期</span>
-        <input class="data-input" id="inWeekday" value="…"
-          oninput="updatePoster()" style="width:60px;text-align:center">
-      </div>
-      <div class="data-row">
-        <span class="data-label">霸菱優先順位資產抵押債</span>
-        <div>
-          <input class="data-input" id="inRate1" value="…"
-            oninput="updatePoster()" style="width:90px">
-          <div class="data-sub" id="sub1"></div>
-        </div>
-      </div>
-      <div class="data-row">
-        <span class="data-label">霸菱環球非投資等級債</span>
-        <div>
-          <input class="data-input" id="inRate2" value="…"
-            oninput="updatePoster()" style="width:90px">
-          <div class="data-sub" id="sub2"></div>
-        </div>
+  const ROW   = 'display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f3f6';
+  const LABEL = 'font-size:13px;color:var(--muted-text)';
+  const INP   = 'border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:14px;font-weight:700;color:var(--ink);font-family:inherit;outline:none;font-variant-numeric:tabular-nums';
+  const SUB   = 'font-size:11px;color:#9aa3b2;margin-top:3px';
+  const rateRow = (name, inpId, subId) => `
+    <div style="${ROW}">
+      <span style="${LABEL};max-width:210px">${name}</span>
+      <div style="text-align:right">
+        <span style="display:inline-flex;align-items:center;gap:2px">
+          <input id="${inpId}" value="…" oninput="updatePoster()" style="${INP};text-align:right;width:78px">
+          <span style="font-size:13px;color:var(--muted-text)">%</span>
+        </span>
+        <div id="${subId}" style="${SUB}"></div>
       </div>
     </div>`;
-  document.getElementById('secFields').textContent = '③ 資料填寫（可手動修改）';
+  container.innerHTML = `
+    <div>
+      <div style="${ROW}">
+        <span style="${LABEL}">配息基準日</span>
+        <input id="inDate" value="讀取中…" oninput="updatePoster()" style="${INP};text-align:right;width:110px">
+      </div>
+      <div style="${ROW}">
+        <span style="${LABEL}">星期</span>
+        <input id="inWeekday" value="…" oninput="updatePoster()" style="${INP};text-align:center;width:64px">
+      </div>
+      ${rateRow('霸菱優先順位資產抵押債','inRate1','sub1')}
+      ${rateRow('霸菱環球非投資等級債','inRate2','sub2')}
+    </div>`;
+  document.getElementById('secFields').textContent = '資料確認';
 }
 
 // ============================================================
-// 渲染 LINE 罐頭文字區
+// 渲染 LINE 訊息區（整張卡片內容）
 // ============================================================
 export function renderMsg(container) {
   container.innerHTML = `
-    <div class="sec-title">⑤ LINE 罐頭文字</div>
-    <div class="msg-box" id="msgBox">讀取中…</div>
-    <div class="btn-row">
-      <button class="btn btn-copy" onclick="copyMsg()">📋 複製文字</button>
-    </div>`;
+    <div class="cs-cardhead"><div class="cs-num">4</div><div class="cs-cardtitle">LINE 訊息</div></div>
+    <div id="msgBox" style="background:#f7f9fc;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;font-variant-numeric:tabular-nums">讀取中…</div>
+    <button onclick="copyMsg()" style="margin-top:10px;width:100%;height:38px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px">📋 複製文字</button>`;
 }
 
 // ============================================================

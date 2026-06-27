@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* ===== Reset & Base ===== */
@@ -138,56 +139,90 @@ body{font-family:'Noto Sans TC',sans-serif;background:#eef0f5;min-height:100vh;-
      目前兩套皆為空，沿用上方既有樣式 → 電腦版維持原樣、不影響運作。
      之後把兩套 layout 的 CSS 分別貼進對應區塊即可。
      ============================================================ -->
+<!-- ============================================================
+     Creative Studio 設計系統 — brand 色票（取自 design export）
+     ============================================================ -->
 <style id="layoutStyle">
-/* ===== 電腦版專屬版面（待補）===== */
-/* .layout-desktop .page { ... } */
-
-/* ===== 手機版專屬版面（待補）===== */
-/* .layout-mobile .page { ... } */
+:root{
+  --page-bg:#e9edf4; --ink:#14254E; --text:#1a2333; --muted-text:#6b7280;
+  --border:#e3e7ef; --card:#ffffff; --accent:#B8923C; --accent-soft:#F6EFDC;
+  --cta-bg:#B8923C; --cta-text:#14254E; --tab-bg:#14254E; --tab-text:#ffffff; --ring:#B8923C;
+}
+body{background:var(--page-bg);font-family:'Inter','Noto Sans TC',sans-serif;color:var(--text)}
+.cs-card{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:18px}
+.cs-cardhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.cs-num{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cs-cardtitle{font-size:14px;font-weight:600;color:var(--ink)}
+/* 電腦版版面 */
+.layout-desktop .cs-shell{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.layout-desktop .cs-main{flex:1;min-height:0;display:grid;grid-template-columns:440px 1fr;gap:24px;padding:24px;overflow:hidden}
+.layout-desktop .cs-controls{overflow:auto;display:flex;flex-direction:column;gap:16px;padding-right:6px}
+/* 手機版版面（待補你的 mobile 設計）*/
+.layout-mobile  .cs-main{display:flex;flex-direction:column;gap:16px;padding:16px}
+.layout-mobile  .cs-preview-col{order:-1}
 </style>
 </head>
 <body>
 
-<div class="toolbar">
-  <div class="toolbar-title">霸菱素材產生器</div>
-  <div class="status">
-    <div class="dot loading" id="dot"></div>
-    <span id="statusTxt">載入中…</span>
-  </div>
-</div>
+<div class="cs-shell">
 
-<div class="page">
-
-  <div class="tpl-section">
-    <div class="sec-title">① 素材類型</div>
-    <div id="materialSelect"></div>
-    <div class="sec-title" id="secTpl">② 版型選擇</div>
-    <div class="tpl-row" id="tplGrid"></div>
-  </div>
-
-  <div class="controls">
-    <div class="sec-title" id="secFields">③ 資料填寫</div>
-    <div id="fieldsContainer"></div>
-    <div class="sec-title">④ 產出與發送</div>
-    <div class="btn-row">
-      <button class="btn btn-dl" id="btnDl" onclick="downloadJPG()" disabled>⬇️ 下載 JPG</button>
-      <button class="btn btn-line" onclick="openLINE()">💬 開啟 LINE</button>
-    </div>
-    <div id="msgSection"></div>
-  </div>
-
-  <div class="preview-col">
-    <div class="preview-wrap">
-      <div class="preview-label">PREVIEW — 1024 × 1024 px</div>
-      <div id="scaleWrap" class="poster-scale">
-        <!-- 素材 HTML 於切換時動態注入 -->
+  <!-- Toolbar -->
+  <div style="height:64px;flex-shrink:0;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;box-shadow:0 1px 2px rgba(0,0,0,.04);z-index:10">
+    <div style="display:flex;align-items:center;gap:16px">
+      <img src="./assets/barings-logo.png" alt="Barings" style="height:25px;display:block">
+      <div style="width:1px;height:30px;background:var(--border)"></div>
+      <div style="display:flex;flex-direction:column;line-height:1.15">
+        <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:.2px">Creative Studio</div>
+        <div style="font-size:11px;color:var(--muted-text);letter-spacing:.5px">基金行銷素材產生器</div>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted-text)">
+      <span id="dot" style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block"></span>
+      <span id="statusTxt">載入中…</span>
+    </div>
   </div>
 
+  <!-- Main：左控制面板 + 右預覽 -->
+  <div class="cs-main">
+
+    <!-- 左：控制面板 -->
+    <div class="cs-controls">
+      <!-- ① 素材類型 -->
+      <div class="cs-card">
+        <div class="cs-cardhead"><div class="cs-num">1</div><div class="cs-cardtitle">素材類型</div></div>
+        <div id="materialSelect"></div>
+      </div>
+      <!-- ② 版型 / 通路 / 模式 -->
+      <div class="cs-card">
+        <div class="cs-cardhead"><div class="cs-num">2</div><div class="cs-cardtitle" id="secTpl">版型選擇</div></div>
+        <div id="tplGrid"></div>
+      </div>
+      <!-- ③ 資料確認 -->
+      <div class="cs-card">
+        <div class="cs-cardhead"><div class="cs-num">3</div><div class="cs-cardtitle" id="secFields">資料確認</div><span style="font-size:11px;color:var(--muted-text);margin-left:auto">可手動修改</span></div>
+        <div id="fieldsContainer"></div>
+      </div>
+      <!-- ④ LINE 訊息（整張卡片由 renderMsg 注入）-->
+      <div id="msgSection" class="cs-card"></div>
+    </div>
+
+    <!-- 右：預覽 -->
+    <div class="cs-preview-col" style="min-width:0;display:flex;flex-direction:column">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:18px 18px 0;display:flex;flex-direction:column;align-items:center;height:100%;overflow:hidden">
+        <div style="align-self:stretch;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px">
+          <span id="previewDim" style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted-text);font-weight:600;white-space:nowrap">Preview · 1024 × 1024 px</span>
+          <button id="btnDl" onclick="downloadJPG()" disabled style="flex-shrink:0;height:40px;padding:0 20px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;background:var(--cta-bg);color:var(--cta-text);display:flex;align-items:center;justify-content:center;gap:8px">⬇️ 下載 JPG</button>
+        </div>
+        <div id="previewArea" style="width:100%;flex:1;min-height:0;overflow:hidden;display:flex;justify-content:center;align-items:flex-start">
+          <div id="scaleWrap" class="poster-scale"><!-- 海報由模組注入 --></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 22px;border-radius:100px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .3s;pointer-events:none;z-index:50;white-space:nowrap"></div>
 
 <script>
 // ============================================================
@@ -225,17 +260,32 @@ async function loadMaterial(key) {
 }
 
 // ============================================================
-// 渲染素材類型 Tabs
+// 設計樣式常數（取自 Creative Studio 設計）
+// ============================================================
+const SEG_BASE = 'flex:1;height:38px;border:none;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;';
+const TPL_GRAD = {
+  dawn:      'linear-gradient(135deg,#a8c0e8,#f5d8c2)',
+  starlight: 'linear-gradient(135deg,#1a3a8f,#0d1b4b)',
+  rosemist:  'linear-gradient(135deg,#f5e6e1,#e6b2a8)',
+};
+const SEC2_TITLE = { dividend:'版型選擇', bankTable:'通路選擇', compare:'選擇比較模式' };
+const stripEmoji = s => s.replace(/^[^一-龥A-Za-z0-9]+/, '').trim();
+
+// ============================================================
+// 渲染素材類型 Tabs（分段式 segmented control）
 // ============================================================
 function renderMaterialTabs() {
   const el = document.getElementById('materialSelect');
   el.innerHTML = '';
   const wrap = document.createElement('div');
-  wrap.className = 'material-tabs';
+  wrap.style.cssText = 'display:flex;gap:6px;background:#f4f5f7;border:1px solid var(--border);border-radius:8px;padding:4px';
   Object.entries(MANIFEST).forEach(([key, m]) => {
+    const active = APP.material === key;
     const btn = document.createElement('button');
-    btn.className = 'mat-tab' + (APP.material === key ? ' active' : '');
-    btn.innerHTML = `<span class="mat-tab-icon">${m.icon}</span><span class="mat-tab-name">${m.name}</span>`;
+    btn.style.cssText = SEG_BASE + (active
+      ? 'background:var(--tab-bg);color:var(--tab-text);box-shadow:0 1px 3px rgba(0,0,0,.18);'
+      : 'background:transparent;color:var(--muted-text);');
+    btn.innerHTML = `<span>${m.name}</span>`;
     btn.onclick = () => onMaterialChange(key);
     wrap.appendChild(btn);
   });
@@ -243,25 +293,39 @@ function renderMaterialTabs() {
 }
 
 // ============================================================
-// 渲染版型按鈕
+// 渲染版型按鈕（色票 swatch 樣式）
 // ============================================================
 function renderTemplateButtons() {
   const grid = document.getElementById('tplGrid');
   grid.innerHTML = '';
   const m = MANIFEST[APP.material];
   if (!m) return;
+  document.getElementById('secTpl').textContent = SEC2_TITLE[APP.material] || '版型選擇';
+
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:10px';
   m.templates.forEach(t => {
+    const active = APP.template === t.key;
     const btn = document.createElement('button');
-    btn.className = 'tpl-btn'
-      + (APP.template === t.key ? ' active' : '')
-      + (!t.available ? ' coming' : '');
     btn.dataset.tpl = t.key;
     btn.disabled = !t.available;
-    btn.textContent = t.label;
+    btn.style.cssText =
+      'flex:1;border-radius:8px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--card);'
+      + (t.available ? 'cursor:pointer;' : 'cursor:not-allowed;opacity:.5;')
+      + (active
+          ? 'border:1.5px solid var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 18%,transparent);'
+          : 'border:1.5px solid var(--border);');
+    const grad = TPL_GRAD[t.key] || 'linear-gradient(135deg,#dfe4ec,#c7cedd)';
+    btn.innerHTML =
+      `<div style="width:100%;height:46px;border-radius:6px;background:${grad}"></div>`
+      + `<span style="font-size:12px;font-weight:600;color:var(--text)">${stripEmoji(t.label)}</span>`;
     if (t.available) btn.onclick = () => selectTpl(t.key);
-    grid.appendChild(btn);
+    row.appendChild(btn);
   });
-  document.getElementById('secTpl').style.display =
+  grid.appendChild(row);
+
+  // 全部不可用 → 隱藏整個 ② 卡片標題列由 CSS 控制，這裡只隱藏按鈕列
+  document.querySelector('.cs-controls').children[1].style.display =
     m.templates.every(t => !t.available) ? 'none' : '';
 }
 
@@ -408,23 +472,24 @@ function openLINE() { window.open('https://line.me/R/', '_blank'); }
 // 工具函式
 // ============================================================
 function setStatus(t, txt) {
-  document.getElementById('dot').className = 'dot ' + t;
+  const colors = { loading:'#f5a623', ok:'#16a34a', err:'#f44336' };
+  const dot = document.getElementById('dot');
+  if (dot) dot.style.background = colors[t] || '#888';
   document.getElementById('statusTxt').textContent = txt;
 }
 
 function toast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  t.textContent = msg; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; }, 2500);
 }
 
 function scalePoster() {
-  const area = document.querySelector('.preview-wrap');
-  if (!area) return;
-  const w = area.clientWidth - 40;
-  const s = Math.min(1, w / 1024);
+  const area = document.getElementById('previewArea');
   const wrap = document.getElementById('scaleWrap');
-  if (!wrap) return;
+  if (!area || !wrap) return;
+  const w = area.clientWidth, h = area.clientHeight;
+  const s = Math.min(1, w / 1024, h / 1024);
   wrap.style.transform = `scale(${s})`;
   wrap.style.marginBottom = `${(1024 * s) - 1024}px`;
 }
