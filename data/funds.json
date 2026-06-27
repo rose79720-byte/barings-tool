@@ -1,0 +1,83 @@
+{
+  "_comment": "競品比較圖 — 種子基金主檔（階段一）。MoneyDJ 的 ?a= code 就是 PLB/PLZ 代碼本身；交接文件那張 PLB22→AY01 對照表是錯的。is_high_yield 為自動推測，待 Rose 逐檔確認。category 用於『同類型合規比較』篩選：競品下拉預設只列同 category 者。",
+  "funds": [
+    {
+      "fund_id": "barings_plb04",
+      "display_name_zh": "霸菱優先順位資產抵押債券基金",
+      "short_name_zh": "霸菱優先順位資產抵押債",
+      "share_class_zh": "G類美元月配息型",
+      "fund_house": "霸菱",
+      "is_barings": true,
+      "category": "全球債券",
+      "moneydj_code": "PLB04",
+      "isin": "",
+      "is_high_yield": true,
+      "note": "有擔保、清償順位高（優先順位資產抵押債券／貸款）。is_high_yield 待 Rose 確認"
+    },
+    {
+      "fund_id": "barings_plb22",
+      "display_name_zh": "霸菱優先順位資產抵押債券基金",
+      "short_name_zh": "霸菱優先順位資產抵押債",
+      "share_class_zh": "BM類美元月配息型",
+      "fund_house": "霸菱",
+      "is_barings": true,
+      "category": "全球債券",
+      "moneydj_code": "PLB22",
+      "isin": "",
+      "is_high_yield": true,
+      "note": "有擔保、清償順位高。is_high_yield 待 Rose 確認"
+    },
+    {
+      "fund_id": "barings_plz45",
+      "display_name_zh": "霸菱成熟及新興市場高收益債券基金",
+      "short_name_zh": "霸菱成熟新興高收益債",
+      "share_class_zh": "A類美元月配息型",
+      "fund_house": "霸菱",
+      "is_barings": true,
+      "category": "全球債券",
+      "moneydj_code": "PLZ45",
+      "isin": "",
+      "is_high_yield": true,
+      "note": "非投資等級高收益。is_high_yield 待 Rose 確認"
+    },
+    {
+      "fund_id": "barings_plz15",
+      "display_name_zh": "霸菱成熟及新興市場高收益債券基金",
+      "short_name_zh": "霸菱成熟新興高收益債",
+      "share_class_zh": "A類美元配息型（季配）",
+      "fund_house": "霸菱",
+      "is_barings": true,
+      "category": "全球債券",
+      "moneydj_code": "PLZ15",
+      "isin": "",
+      "is_high_yield": true,
+      "note": "非投資等級高收益。is_high_yield 待 Rose 確認"
+    },
+    {
+      "fund_id": "pimco_diversified_income_pim41",
+      "display_name_zh": "PIMCO多元收益債券基金",
+      "short_name_zh": "PIMCO多元收益債",
+      "share_class_zh": "M級類別（月收息股份）",
+      "fund_house": "PIMCO",
+      "is_barings": false,
+      "category": "全球債券",
+      "moneydj_code": "PIM41",
+      "isin": "",
+      "is_high_yield": true,
+      "note": "全球多元債（投資級、高收益、新興市場債）。有相當比重投資非投資等級。is_high_yield 待 Rose 確認"
+    },
+    {
+      "fund_id": "gs_us_dollar_credit_anz91",
+      "display_name_zh": "高盛投資級公司債基金",
+      "short_name_zh": "高盛投資級公司債",
+      "share_class_zh": "X股美元（月配息）",
+      "fund_house": "高盛（野村總代理）",
+      "is_barings": false,
+      "category": "全球債券",
+      "moneydj_code": "ANZ91",
+      "isin": "",
+      "is_high_yield": false,
+      "note": "全球投資等級公司債（高信評為主），RR2。is_high_yield 待 Rose 確認"
+    }
+  ]
+}

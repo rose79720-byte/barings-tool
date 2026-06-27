@@ -1,5 +1,14 @@
 {
   "materials": {
+    "compare": {
+      "name": "競品比較圖",
+      "icon": "⚖️",
+      "autoFetch": true,
+      "defaultTpl": "barings",
+      "templates": [
+        { "key": "barings", "label": "🛡 霸菱比較版", "available": true }
+      ]
+    },
     "dividend": {
       "name": "配息提醒",
       "icon": "📅",
