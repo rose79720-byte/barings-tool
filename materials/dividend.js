@@ -324,9 +324,9 @@ export const CSS = `
       position:relative;
     }
 #poster-rosemist .date-big{
-      font-family:'Cormorant Garamond',serif;
+      font-family:'Playfair Display',serif;
       color:var(--rose-deep);
-      font-size:255px;
+      font-size:230px;
       line-height:.9;
       font-weight:600;
       letter-spacing:-8px;
@@ -419,9 +419,9 @@ export const CSS = `
     }
 #poster-rosemist .rate{
       margin-top:auto;
-      font-family:'Cormorant Garamond',serif;
+      font-family:'Playfair Display',serif;
       color:var(--rose-deep);
-      font-size:110px;
+      font-size:96px;
       line-height:.95;
       font-weight:600;
       letter-spacing:-5px;
