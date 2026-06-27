@@ -785,6 +785,7 @@ export function showPoster(tplKey) {
 // html2canvas 修正
 // ============================================================
 export function onDownloadClone(doc, tplKey) {
+  // 修正漸層文字（html2canvas 不支援 background-clip: text）
   [
     ['.date-big',        '#2a3556'],
     ['.fund-rate',       '#2a3556'],
@@ -800,6 +801,20 @@ export function onDownloadClone(doc, tplKey) {
       n.style.filter     = 'none';
     });
   });
+
+  // 修正 backdrop-filter（html2canvas 不支援毛玻璃效果，改用實心背景）
+  doc.querySelectorAll('.fund-card').forEach(el => {
+    el.style.backdropFilter       = 'none';
+    el.style.webkitBackdropFilter = 'none';
+    el.style.background           = 'rgba(255,252,244,0.92)';
+  });
+  doc.querySelectorAll('.night-fund-card').forEach(el => {
+    el.style.backdropFilter       = 'none';
+    el.style.webkitBackdropFilter = 'none';
+    el.style.background           = 'rgba(255,255,255,0.10)';
+  });
+
+  // 修正夜空 Logo（html2canvas 不支援 CSS filter，用 canvas 手動轉白）
   if (tplKey === 'starlight') {
     const nightLogo = doc.querySelector('.night-logo');
     if (nightLogo) {

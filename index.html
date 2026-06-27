@@ -331,6 +331,7 @@ async function downloadJPG() {
   const btn = document.getElementById('btnDl');
   btn.disabled = true; btn.textContent = '⏳ 產圖中…';
   try {
+    await document.fonts.ready;
     const posterEl = MOD.getActivePosterEl(APP.template);
     if (!posterEl) { toast('⚠️ 版型開發中，尚無法下載'); return; }
     const c = await html2canvas(posterEl, {
