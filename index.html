@@ -212,13 +212,19 @@ body{background:var(--page-bg);font-family:'Inter','Noto Sans TC',sans-serif;col
           <span id="previewDim" style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted-text);font-weight:600;white-space:nowrap">Preview · 1024 × 1024 px</span>
           <button id="btnDl" onclick="downloadJPG()" disabled style="flex-shrink:0;height:40px;padding:0 20px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;background:var(--cta-bg);color:var(--cta-text);display:flex;align-items:center;justify-content:center;gap:8px">⬇️ 下載 JPG</button>
         </div>
-        <div id="previewArea" style="width:100%;flex:1;min-height:0;overflow:hidden;display:flex;justify-content:center;align-items:flex-start">
-          <div id="scaleWrap" class="poster-scale"><!-- 海報由模組注入 --></div>
+        <div id="previewArea" style="width:100%;flex:1;min-height:0;overflow:hidden;display:flex;justify-content:center;align-items:center;position:relative;padding-bottom:18px">
+          <img id="previewImg" alt="預覽" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.12);display:none">
+          <div id="previewSpinner" style="position:absolute;font-size:12px;color:var(--muted-text)">產生預覽中…</div>
         </div>
       </div>
     </div>
 
   </div>
+</div>
+
+<!-- 海報在畫面外以全尺寸渲染，供 html2canvas 擷取（preview 與下載皆用此結果）-->
+<div id="renderStage" style="position:fixed;left:-10000px;top:0;width:1024px;height:1024px;overflow:hidden;pointer-events:none">
+  <div id="scaleWrap"><!-- 海報由模組注入 --></div>
 </div>
 
 <div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 22px;border-radius:100px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .3s;pointer-events:none;z-index:50;white-space:nowrap"></div>
@@ -365,7 +371,7 @@ async function onMaterialChange(key) {
   MOD.renderFields(document.getElementById('fieldsContainer'));
   MOD.renderMsg(document.getElementById('msgSection'));
   MOD.showPoster(APP.template);
-  scalePoster();
+  scheduleRenderPreview();
 
   if (MANIFEST[key].autoFetch) {
     await init();
@@ -394,6 +400,7 @@ function selectTpl(tplKey) {
 // ============================================================
 function updatePoster() {
   if (MOD) MOD.update();
+  scheduleRenderPreview();
 }
 
 // ============================================================
@@ -404,6 +411,7 @@ async function onChannelChange(channel) {
     setStatus('loading', '費率載入中…');
     try {
       await MOD.onChannelChange(channel, SCRIPT);
+      scheduleRenderPreview();
       setStatus('ok', '費率已更新');
       document.getElementById('btnDl').disabled = false;
     } catch(e) {
@@ -420,6 +428,7 @@ async function init() {
   document.getElementById('btnDl').disabled = true;
   try {
     await MOD.fetchData(SCRIPT);
+    scheduleRenderPreview();
     setStatus('ok', '資料已更新');
     document.getElementById('btnDl').disabled = false;
   } catch(e) {
@@ -435,36 +444,15 @@ async function downloadJPG() {
   const btn = document.getElementById('btnDl');
   btn.disabled = true; btn.textContent = '⏳ 產圖中…';
   try {
-    // 明確強制載入該素材用到的字型，避免 html2canvas 退回系統襯線體
-    if (MOD.FONTS) {
-      try { await Promise.all(MOD.FONTS.map(f => document.fonts.load(f))); } catch(e) {}
-    }
-    await document.fonts.ready;
-    const posterEl = MOD.getActivePosterEl(APP.template);
-    if (!posterEl) { toast('⚠️ 版型開發中，尚無法下載'); return; }
-    // 截圖前還原預覽縮放（祖先 transform:scale 會讓 html2canvas 截圖糊掉）
-    const wrap = document.getElementById('scaleWrap');
-    const prevTransform = wrap.style.transform;
-    const prevMargin    = wrap.style.marginBottom;
-    wrap.style.transform = 'none';
-    wrap.style.marginBottom = '0px';
-    let c;
-    try {
-      c = await html2canvas(posterEl, {
-        width:1024, height:1024, scale:2, useCORS:true, allowTaint:true,
-        backgroundColor:null, logging:false,
-        onclone: (doc) => MOD.onDownloadClone(doc, APP.template),
-      });
-    } finally {
-      wrap.style.transform = prevTransform;
-      wrap.style.marginBottom = prevMargin;
-    }
+    // 下載就是 preview 所顯示的那張圖（同一個 canvas）→ 兩者必定一致
+    if (!_lastCanvas) await renderPreview();
+    if (!_lastCanvas) { toast('⚠️ 尚無法產生圖片，請稍候再試'); return; }
     const out = document.createElement('canvas');
     out.width = 1080; out.height = 1080;
     const ctx = out.getContext('2d');
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(c, 0, 0, 1080, 1080);
+    ctx.drawImage(_lastCanvas, 0, 0, 1080, 1080);
     const a = document.createElement('a');
     a.download = MOD.getDownloadFileName(APP);
     a.href = out.toDataURL('image/jpeg', 0.95);
@@ -504,15 +492,38 @@ function toast(msg) {
   setTimeout(() => { t.style.opacity = '0'; }, 2500);
 }
 
-function scalePoster() {
-  const area = document.getElementById('previewArea');
-  const wrap = document.getElementById('scaleWrap');
-  if (!area || !wrap) return;
-  const w = area.clientWidth, h = area.clientHeight;
-  const s = Math.min(1, w / 1024, h / 1024);
-  wrap.style.transform = `scale(${s})`;
-  wrap.style.marginBottom = `${(1024 * s) - 1024}px`;
+// ============================================================
+// 預覽 = html2canvas 產出的圖（與下載完全一致）
+// 海報在畫面外 #renderStage 全尺寸渲染，擷取成圖顯示於 previewImg
+// ============================================================
+let _lastCanvas = null;
+let _rpTimer = null;
+function scalePoster() { /* 預覽改為圖片，CSS 自動縮放；保留空函式相容舊呼叫 */ }
+function scheduleRenderPreview() {
+  clearTimeout(_rpTimer);
+  _rpTimer = setTimeout(renderPreview, 220);
 }
+async function renderPreview() {
+  if (!MOD || typeof html2canvas === 'undefined') return;
+  const posterEl = MOD.getActivePosterEl(APP.template);
+  if (!posterEl) return;
+  try {
+    if (MOD.FONTS) { try { await Promise.all(MOD.FONTS.map(f => document.fonts.load(f))); } catch(e) {} }
+    await document.fonts.ready;
+    const canvas = await html2canvas(posterEl, {
+      width:1024, height:1024, scale:2, useCORS:true, allowTaint:true,
+      backgroundColor:null, logging:false,
+      onclone: (doc) => MOD.onDownloadClone(doc, APP.template),
+    });
+    _lastCanvas = canvas;
+    const img = document.getElementById('previewImg');
+    img.src = canvas.toDataURL('image/jpeg', 0.92);
+    img.style.display = '';
+    const spin = document.getElementById('previewSpinner');
+    if (spin) spin.style.display = 'none';
+  } catch(e) { /* 失敗則保留上一張預覽 */ }
+}
+window.scheduleRenderPreview = scheduleRenderPreview;
 
 // ============================================================
 // 啟動
@@ -525,8 +536,8 @@ async function bootstrap() {
   MOD.renderFields(document.getElementById('fieldsContainer'));
   MOD.renderMsg(document.getElementById('msgSection'));
   MOD.showPoster(APP.template);
-  scalePoster();
-  // 海報已先顯示；資料抓取在背景進行，不阻塞畫面（抓到後自動更新費率）
+  scheduleRenderPreview();   // 立即用快取資料產生預覽
+  // 資料抓取在背景進行，不阻塞畫面（抓到後自動更新並重繪預覽）
   init();
 }
 

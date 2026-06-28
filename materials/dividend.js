@@ -744,6 +744,7 @@ if (typeof window !== 'undefined') {
     fundCount = n;
     renderFields(document.getElementById('fieldsContainer'));
     update();
+    if (window.scheduleRenderPreview) window.scheduleRenderPreview();
   };
 }
 
