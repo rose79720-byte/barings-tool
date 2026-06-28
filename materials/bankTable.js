@@ -133,7 +133,7 @@ export function renderFields(container) {
       ${def.fund2.rows.length ? subhead(def.fund2.title) + _rateRows(def.fund2.rows) : ''}
       <div style="font-size:11px;color:#9aa3b2;margin-top:12px">💡 每月查詢最新費率後填入，海報即時更新</div>
     </div>`;
-  document.getElementById('secFields').textContent = '費率填寫';
+  document.getElementById('secFields').textContent = '費率確認';
 }
 
 // ============================================================
@@ -203,7 +203,7 @@ async function _fetchBankRates(channel, SCRIPT) {
       if (el) el.value = val;
     });
     const asOfLabel = d.asOf ? `（資料：${d.asOf}）` : '';
-    document.getElementById('secFields').textContent = `③ 費率填寫（每月更新）${asOfLabel}`;
+    document.getElementById('secFields').textContent = `費率確認${asOfLabel}`;
     _updateBankPoster(channel);
   } catch(e) {
     _updateBankPoster(channel);

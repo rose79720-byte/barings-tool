@@ -446,6 +446,28 @@ export const CSS = `
       background:linear-gradient(90deg, rgba(224,191,183,.62) 0%, rgba(224,191,183,0) 12%, rgba(224,191,183,0) 88%, rgba(224,191,183,.62) 100%);
       z-index:1;
     }
+
+/* ===== 數字統一字體（系統內建 Times New Roman → html2canvas 必可渲染）+ 單色 =====
+   覆寫三版原本的漸層／自訂字體，確保 preview 與下載完全一致 */
+#poster .date-big, #poster .fund-rate,
+.night-date-big, .night-fund-rate,
+#poster-rosemist .date-big, #poster-rosemist .rate {
+  font-family: 'Times New Roman', Times, serif !important;
+  font-variant-numeric: lining-nums proportional-nums !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  filter: none !important;
+}
+#poster .date-big, #poster .fund-rate { color:#2a3556 !important; -webkit-text-fill-color:#2a3556 !important; }
+#poster .date-big .slash { color:#b0623a !important; -webkit-text-fill-color:#b0623a !important; }
+.night-date-big, .night-fund-rate, .night-date-big .slash, .night-fund-rate .pct {
+  color:#e8c275 !important; -webkit-text-fill-color:#e8c275 !important;
+}
+#poster-rosemist .date-big, #poster-rosemist .date-big .slash,
+#poster-rosemist .rate, #poster-rosemist .rate .pct {
+  color:#c98476 !important; -webkit-text-fill-color:#c98476 !important;
+}
 `;
 
 export const HTML = `
