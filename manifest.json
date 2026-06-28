@@ -26,18 +26,7 @@
       "autoFetch": false,
       "defaultTpl": "wip",
       "templates": [
-        { "key": "fubon",  "label": "🏛 富邦", "available": false },
-        { "key": "tashin", "label": "🏦 台新", "available": false },
-        { "key": "wip",    "label": "🔧 開發中", "available": false }
-      ]
-    },
-    "taishin": {
-      "name": "台新基金資訊表",
-      "icon": "🏦",
-      "autoFetch": true,
-      "defaultTpl": "info",
-      "templates": [
-        { "key": "info", "label": "📄 精選核心數據", "available": true }
+        { "key": "wip", "label": "🔧 通路", "available": false }
       ]
     }
   }

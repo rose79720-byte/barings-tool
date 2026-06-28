@@ -396,7 +396,7 @@ async function onMaterialChange(key) {
   } else {
     setStatus('ok', '請填入資料');
     document.getElementById('btnDl').disabled = true;
-    if (key === 'bankTable') await onChannelChange('富邦');
+    if (key === 'bankTable') await onChannelChange('台新');
   }
 }
 
@@ -521,7 +521,8 @@ async function renderPreview() {
   const posterEl = MOD.getActivePosterEl(APP.template);
   if (!posterEl) return;
   // 海報尺寸由模組決定（方形 1024、橫式 1920×1080，或直式文件只給寬、高度自動量測）
-  const want = MOD.POSTER || { w:1024, h:1024 };
+  // 模組可改用 getPoster() 動態回傳（例如 bankTable 依通路不同尺寸）
+  const want = (typeof MOD.getPoster === 'function' ? MOD.getPoster() : MOD.POSTER) || { w:1024, h:1024 };
   const stage = document.getElementById('renderStage');
   if (stage) { stage.style.width = want.w + 'px'; stage.style.height = (want.h || 6000) + 'px'; }
   const sz = { w: want.w, h: want.h };
