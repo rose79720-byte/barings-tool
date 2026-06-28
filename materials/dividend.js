@@ -898,21 +898,21 @@ export function onDownloadClone(doc, tplKey) {
     });
   });
 
-  // 修正 backdrop-filter（html2canvas 不支援毛玻璃效果，改用實心背景）
+  // 修正 backdrop-filter（html2canvas 不支援毛玻璃效果，改用不透明實心背景，避免底圖透出顯淡）
   doc.querySelectorAll('.fund-card').forEach(el => {
     el.style.backdropFilter       = 'none';
     el.style.webkitBackdropFilter = 'none';
-    el.style.background           = 'rgba(255,252,244,0.92)';
+    el.style.background           = 'linear-gradient(160deg,#fffdf8 0%,#fff7e8 100%)';
   });
   doc.querySelectorAll('.night-fund-card').forEach(el => {
     el.style.backdropFilter       = 'none';
     el.style.webkitBackdropFilter = 'none';
-    el.style.background           = 'rgba(255,255,255,0.10)';
+    el.style.background           = 'rgba(255,255,255,0.13)';   // 深底上維持玻璃感
   });
   doc.querySelectorAll('#poster-rosemist .card').forEach(el => {
     el.style.backdropFilter       = 'none';
     el.style.webkitBackdropFilter = 'none';
-    el.style.background           = 'rgba(255,251,250,0.95)';
+    el.style.background           = 'linear-gradient(180deg,#ffffff 0%,#fbf3f1 100%)';
   });
 
   // 修正夜空 Logo（html2canvas 不支援 CSS filter，用 canvas 手動轉白）
