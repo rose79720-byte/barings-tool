@@ -223,6 +223,7 @@ export function renderFields(container) {
   if (!S.comp2) S.comp2 = pool.find(f => f.fund_id !== S.comp1 && !f.is_barings)?.fund_id
                           || pool.find(f => f.fund_id !== S.comp1)?.fund_id || null;
 
+  const comp1Label = S.mode === '1v1v1' ? '競品 1' : '競品';
   container.innerHTML = `
     <div class="data-card">
       <div class="cmp-field cmp-lead">
@@ -231,18 +232,13 @@ export function renderFields(container) {
       </div>
 
       <div class="cmp-field">
-        <label>競品 1</label>
+        <label>${comp1Label}</label>
         <select class="cmp-select" id="cmpComp1"></select>
       </div>
       <div class="cmp-field" id="cmpComp2Wrap">
         <label>競品 2</label>
         <select class="cmp-select" id="cmpComp2"></select>
       </div>
-
-      <label class="cmp-checkrow" style="margin-bottom:4px">
-        <input type="checkbox" id="cmpAllCat"> 顯示全部分類（跨類別比較）
-      </label>
-      <div class="cmp-warn" id="cmpCatWarn" style="display:none">⚠️ 跨類別比較，需法遵確認</div>
     </div>
 
     <div class="data-card">
@@ -259,16 +255,6 @@ export function renderFields(container) {
         <select class="cmp-select" id="cmpVPSelect"></select>
         <input class="data-input" id="cmpVPText" style="width:100%;text-align:left;margin-top:8px"
           placeholder="或自行輸入價值主張…">
-      </div>
-      <div class="cmp-toggle">
-        <div>
-          <div class="lbl">皇冠／徽章標記</div>
-          <div class="hint">合規考量，預設關閉</div>
-        </div>
-        <label class="cmp-switch">
-          <input type="checkbox" id="cmpCrown">
-          <span class="slider"></span>
-        </label>
       </div>
     </div>`;
 
@@ -294,17 +280,13 @@ export function renderFields(container) {
   });
 
   // 初始 UI 狀態
-  container.querySelectorAll('.cmp-mode-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.mode === S.mode));
-  container.querySelector('#cmpAllCat').checked = S.showAllCat;
-  container.querySelector('#cmpCrown').checked = S.crown;
   vpSel.value = S.valueProp;
 
   _refreshSelects(container);
   _wireEvents(container);
   _applyModeUI(container);
 
-  document.getElementById('secFields').textContent = '③ 比較設定（數字可手動修改）';
+  document.getElementById('secFields').textContent = '比較設定';
 
   update();
 }
@@ -367,18 +349,6 @@ function _wireEvents(root) {
   c.querySelector('#cmpComp2').addEventListener('change', e => {
     S.comp2 = e.target.value; _refreshSelects(c); update();
   });
-  c.querySelectorAll('.cmp-mode-btn').forEach(b =>
-    b.addEventListener('click', () => {
-      S.mode = b.dataset.mode;
-      c.querySelectorAll('.cmp-mode-btn').forEach(x =>
-        x.classList.toggle('active', x.dataset.mode === S.mode));
-      _applyModeUI(c); update();
-    }));
-  c.querySelector('#cmpAllCat').addEventListener('change', e => {
-    S.showAllCat = e.target.checked;
-    c.querySelector('#cmpCatWarn').style.display = e.target.checked ? '' : 'none';
-    _refreshSelects(c); update();
-  });
   c.querySelectorAll('input[data-dim]').forEach(cb =>
     cb.addEventListener('change', () => { S.dims[cb.dataset.dim] = cb.checked; update(); }));
   c.querySelector('#cmpVPSelect').addEventListener('change', e => {
@@ -389,9 +359,6 @@ function _wireEvents(root) {
   c.querySelector('#cmpVPText').addEventListener('input', e => {
     S.valueProp = e.target.value.trim() || c.querySelector('#cmpVPSelect').value;
     update();
-  });
-  c.querySelector('#cmpCrown').addEventListener('change', e => {
-    S.crown = e.target.checked; update();
   });
 }
 
