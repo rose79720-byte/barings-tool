@@ -515,6 +515,8 @@ async function renderPreview() {
     const canvas = await html2canvas(posterEl, {
       width:sz.w, height:sz.h, scale:2, useCORS:true, allowTaint:true,
       backgroundColor:null, logging:false,
+      // 以海報尺寸當虛擬視窗，確保橫式(1920)等比視窗寬的海報能完整擷取、不被裁切
+      windowWidth: sz.w, windowHeight: sz.h, x:0, y:0, scrollX:0, scrollY:0,
       onclone: (doc) => MOD.onDownloadClone(doc, APP.template),
     });
     _lastCanvas = canvas;
