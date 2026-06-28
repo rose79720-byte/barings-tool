@@ -154,7 +154,7 @@ body{background:var(--page-bg);font-family:'Inter','Noto Sans TC',sans-serif;col
 .cs-cardtitle{font-size:14px;font-weight:600;color:var(--ink)}
 /* 電腦版版面 */
 .layout-desktop .cs-shell{height:100vh;display:flex;flex-direction:column;overflow:hidden}
-.layout-desktop .cs-main{flex:1;min-height:0;display:grid;grid-template-columns:440px 1fr;gap:24px;padding:24px;overflow:hidden}
+.layout-desktop .cs-main{flex:1;min-height:0;display:grid;grid-template-columns:440px 1fr;grid-template-rows:minmax(0,1fr);gap:24px;padding:24px;overflow:hidden}
 .layout-desktop .cs-controls{overflow:auto;display:flex;flex-direction:column;gap:16px;padding-right:6px}
 /* 手機版版面（待補你的 mobile 設計）*/
 .layout-mobile  .cs-main{display:flex;flex-direction:column;gap:16px;padding:16px}
