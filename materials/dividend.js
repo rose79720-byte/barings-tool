@@ -512,21 +512,21 @@ export const HTML = `
             </div>
             <div class="date-weekday" id="pWD">星 期 五</div>
           </div>
-          <div class="funds">
-            <div class="fund-card">
+          <div class="funds" id="pFunds">
+            <div class="fund-card" id="pCard1">
               <div class="fund-head">
                 <div class="fund-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-                <div class="fund-name">霸菱優先順位資產抵押債</div>
+                <div class="fund-name" id="pName1">霸菱優先順位資產抵押債</div>
               </div>
               <div class="fund-body">
                 <div class="fund-rate-label">年 化 約</div>
                 <div class="fund-rate"><span id="pR1">10.46</span><span class="percent">%</span></div>
               </div>
             </div>
-            <div class="fund-card">
+            <div class="fund-card" id="pCard2">
               <div class="fund-head">
                 <div class="fund-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="9" ry="3.5"/><path d="M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg></div>
-                <div class="fund-name">霸菱環球非投資等級債</div>
+                <div class="fund-name" id="pName2">霸菱環球非投資等級債</div>
               </div>
               <div class="fund-body">
                 <div class="fund-rate-label">年 化 約</div>
@@ -555,26 +555,26 @@ export const HTML = `
               <div class="night-weekday" id="nWD">星 期 五</div>
               <div class="night-tagline">月月收息&nbsp;&nbsp;日日安心</div>
             </div>
-            <div class="night-funds">
-              <div class="night-fund-card">
+            <div class="night-funds" id="nFunds">
+              <div class="night-fund-card" id="nCard1">
                 <div class="night-fund-left">
                   <div class="night-fund-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
                   </div>
                   <div>
-                    <div class="night-fund-name">霸菱優先順位資產抵押債基金</div>
+                    <div class="night-fund-name" id="nName1">霸菱優先順位資產抵押債基金</div>
                     <div class="night-fund-sub">年化配息率約</div>
                   </div>
                 </div>
                 <div class="night-fund-rate"><span id="nR1">10.4</span><span class="pct">%</span></div>
               </div>
-              <div class="night-fund-card">
+              <div class="night-fund-card" id="nCard2">
                 <div class="night-fund-left">
                   <div class="night-fund-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="9" ry="3.5"/><path d="M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
                   </div>
                   <div>
-                    <div class="night-fund-name">霸菱環球非投資等級債基金</div>
+                    <div class="night-fund-name" id="nName2">霸菱環球非投資等級債基金</div>
                     <div class="night-fund-sub">年化配息率約</div>
                   </div>
                 </div>
@@ -610,21 +610,21 @@ export const HTML = `
         <div class="weekday" id="rmWeekday">星 期 五</div>
       </div>
 
-      <div class="cards">
-        <div class="card">
+      <div class="cards" id="rmCards">
+        <div class="card" id="rmCard1">
           <div class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 3.5L18 6V11.5C18 15.2 15.8 18.2 12 20C8.2 18.2 6 15.2 6 11.5V6L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
               <path d="M9.3 11.8L11.2 13.7L14.9 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <div class="fund-name">霸菱優先順位資產抵押債基金</div>
+          <div class="fund-name" id="rmName1">霸菱優先順位資產抵押債基金</div>
           <div class="fund-divider"></div>
           <div class="fund-sub">年化配息率約</div>
           <div class="rate"><span id="rmRate1">10.4</span><span class="pct">%</span></div>
         </div>
 
-        <div class="card">
+        <div class="card" id="rmCard2">
           <div class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
@@ -633,7 +633,7 @@ export const HTML = `
               <path d="M12 4C9.5 6.2 8 9 8 12C8 15 9.5 17.8 12 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
           </div>
-          <div class="fund-name">霸菱環球非投資等級債基金</div>
+          <div class="fund-name" id="rmName2">霸菱環球非投資等級債基金</div>
           <div class="fund-divider"></div>
           <div class="fund-sub">年化配息率約</div>
           <div class="rate"><span id="rmRate2">11.2</span><span class="pct">%</span></div>
@@ -652,38 +652,96 @@ const MZH = ['一','二','三','四','五','六','七','八','九','十','十一
 const MEN = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 // ============================================================
+// 基金清單（未來會擴充；目前先用現有兩支）
+// nameShort：晨曦版（空間較窄）；name：夜空／玫瑰版
+// ============================================================
+const FUNDS = [
+  { id:'priority', nameShort:'霸菱優先順位資產抵押債', name:'霸菱優先順位資產抵押債基金', defRate:'10.50' },
+  { id:'global',   nameShort:'霸菱環球非投資等級債',   name:'霸菱環球非投資等級債基金',   defRate:'11.29' },
+];
+const fundById = id => FUNDS.find(f => f.id === id) || FUNDS[0];
+
+// 狀態：呈現 1 或 2 支、選定的基金
+let fundCount = 2;          // 1 | 2
+let sel1 = 'priority';      // 第 1 支
+let sel2 = 'global';        // 第 2 支（fundCount=2 時）
+
+// ============================================================
 // 渲染表單欄位
 // ============================================================
-export function renderFields(container) {
-  const ROW   = 'display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f3f6';
-  const LABEL = 'font-size:13px;color:var(--muted-text)';
-  const INP   = 'border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:14px;font-weight:700;color:var(--ink);font-family:inherit;outline:none;font-variant-numeric:tabular-nums';
-  const SUB   = 'font-size:11px;color:#9aa3b2;margin-top:3px';
-  const rateRow = (name, inpId, subId) => `
-    <div style="${ROW}">
-      <span style="${LABEL};max-width:210px">${name}</span>
-      <div style="text-align:right">
+const _ROW   = 'display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f3f6';
+const _LABEL = 'font-size:13px;color:var(--muted-text)';
+const _INP   = 'border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:14px;font-weight:700;color:var(--ink);font-family:inherit;outline:none;font-variant-numeric:tabular-nums';
+const _SEL   = 'width:100%;height:38px;border:1px solid var(--border);border-radius:6px;padding:0 10px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;font-family:inherit;outline:none;cursor:pointer';
+
+// 基金挑選 + 配息率（一支）
+function _fundBlock(idx, selId, rateId, subId) {
+  const opts = FUNDS.map(f => `<option value="${f.id}" ${f.id===selId?'selected':''}>${f.name}</option>`).join('');
+  const label = fundCount === 1 ? '基金' : `基金 ${idx}`;
+  return `
+    <div style="padding:11px 0;border-bottom:1px solid #f1f3f6">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+        <label style="font-size:12px;font-weight:600;color:var(--ink)">${label}</label>
         <span style="display:inline-flex;align-items:center;gap:2px">
-          <input id="${inpId}" value="…" oninput="updatePoster()" style="${INP};text-align:right;width:78px">
+          <input id="${rateId}" value="…" oninput="updatePoster()" style="${_INP};text-align:right;width:78px">
           <span style="font-size:13px;color:var(--muted-text)">%</span>
         </span>
-        <div id="${subId}" style="${SUB}"></div>
+      </div>
+      <select id="${selId}" onchange="updatePoster()" style="${_SEL}">${opts}</select>
+      <div id="${subId}" style="font-size:11px;color:#9aa3b2;margin-top:4px"></div>
+    </div>`;
+}
+
+// 1 / 2 支切換按鈕
+function _countToggle() {
+  const seg = (n, lbl) => {
+    const active = fundCount === n;
+    return `<button onclick="window.__divSetCount(${n})" style="flex:1;height:34px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;`
+      + (active ? 'background:var(--ink);color:#fff;' : 'background:transparent;color:var(--muted-text);')
+      + `">${lbl}</button>`;
+  };
+  return `
+    <div style="${_ROW}">
+      <span style="${_LABEL}">呈現基金數</span>
+      <div style="display:flex;gap:6px;background:#f4f5f7;border:1px solid var(--border);border-radius:8px;padding:3px;width:180px">
+        ${seg(1,'1 支')}${seg(2,'2 支')}
       </div>
     </div>`;
+}
+
+export function renderFields(container) {
   container.innerHTML = `
     <div>
-      <div style="${ROW}">
-        <span style="${LABEL}">配息基準日</span>
-        <input id="inDate" value="讀取中…" oninput="updatePoster()" style="${INP};text-align:right;width:110px">
+      <div style="${_ROW}">
+        <span style="${_LABEL}">配息基準日</span>
+        <input id="inDate" value="讀取中…" oninput="updatePoster()" style="${_INP};text-align:right;width:110px">
       </div>
-      <div style="${ROW}">
-        <span style="${LABEL}">星期</span>
-        <input id="inWeekday" value="…" oninput="updatePoster()" style="${INP};text-align:center;width:64px">
+      <div style="${_ROW}">
+        <span style="${_LABEL}">星期</span>
+        <input id="inWeekday" value="…" oninput="updatePoster()" style="${_INP};text-align:center;width:64px">
       </div>
-      ${rateRow('霸菱優先順位資產抵押債','inRate1','sub1')}
-      ${rateRow('霸菱環球非投資等級債','inRate2','sub2')}
+      ${_countToggle()}
+      ${_fundBlock(1, 'inFund1', 'inRate1', 'sub1')}
+      ${fundCount === 2 ? _fundBlock(2, 'inFund2', 'inRate2', 'sub2') : ''}
     </div>`;
   document.getElementById('secFields').textContent = '資料確認';
+
+  // 還原當前選擇與預設費率
+  const f1 = document.getElementById('inFund1'); if (f1) f1.value = sel1;
+  const r1 = document.getElementById('inRate1'); if (r1 && (!r1.value || r1.value === '…')) r1.value = fundById(sel1).defRate;
+  if (fundCount === 2) {
+    const f2 = document.getElementById('inFund2'); if (f2) f2.value = sel2;
+    const r2 = document.getElementById('inRate2'); if (r2 && (!r2.value || r2.value === '…')) r2.value = fundById(sel2).defRate;
+  }
+}
+
+// 由 ③ 的「1/2 支」按鈕呼叫（全域 hook）
+if (typeof window !== 'undefined') {
+  window.__divSetCount = function (n) {
+    fundCount = n;
+    renderFields(document.getElementById('fieldsContainer'));
+    update();
+  };
 }
 
 // ============================================================
@@ -702,14 +760,12 @@ export function renderMsg(container) {
 export async function fetchData(SCRIPT) {
   const r = await fetch(SCRIPT + '?action=getAll');
   const d = await r.json();
-  document.getElementById('inDate').value    = d.date          || '';
-  document.getElementById('inWeekday').value = d.weekday       || '';
-  document.getElementById('inRate1').value   = d.fund1?.rate   || '';
-  document.getElementById('inRate2').value   = d.fund2?.rate   || '';
-  const s1 = document.getElementById('sub1');
-  const s2 = document.getElementById('sub2');
-  if (s1) s1.textContent = d.fund1?.asOf ? '資料日期：' + d.fund1.asOf : '';
-  if (s2) s2.textContent = d.fund2?.asOf ? '資料日期：' + d.fund2.asOf : '';
+  const inDate = document.getElementById('inDate');     if (inDate) inDate.value = d.date || '';
+  const inWd   = document.getElementById('inWeekday');  if (inWd)   inWd.value   = d.weekday || '';
+  const r1 = document.getElementById('inRate1'); if (r1 && d.fund1?.rate) r1.value = d.fund1.rate;
+  const r2 = document.getElementById('inRate2'); if (r2 && d.fund2?.rate) r2.value = d.fund2.rate;
+  const s1 = document.getElementById('sub1'); if (s1) s1.textContent = d.fund1?.asOf ? '資料日期：' + d.fund1.asOf : '';
+  const s2 = document.getElementById('sub2'); if (s2) s2.textContent = d.fund2?.asOf ? '資料日期：' + d.fund2.asOf : '';
   update();
 }
 
@@ -719,54 +775,67 @@ export async function fetchData(SCRIPT) {
 export function update() {
   const dateEl = document.getElementById('inDate');
   if (!dateEl) return;
-  const date  = dateEl.value.trim();
-  const wd    = document.getElementById('inWeekday')?.value.trim() || '';
-  const r1    = document.getElementById('inRate1')?.value.trim()   || '';
-  const r2    = document.getElementById('inRate2')?.value.trim()   || '';
-  const parts = date.split('/');
-  const mi    = parseInt(parts[0]) - 1;
-  const day   = parts[1] || '??';
-  const yr    = new Date().getFullYear();
-  const set   = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const date = dateEl.value.trim();
+  const wd   = document.getElementById('inWeekday')?.value.trim() || '';
+  // 同步選擇
+  sel1 = document.getElementById('inFund1')?.value || sel1;
+  if (fundCount === 2) sel2 = document.getElementById('inFund2')?.value || sel2;
+  const f1 = fundById(sel1), f2 = fundById(sel2);
+  const r1 = document.getElementById('inRate1')?.value.trim() || '';
+  const r2 = fundCount === 2 ? (document.getElementById('inRate2')?.value.trim() || '') : '';
 
-  // Dawn
+  const parts = date.split('/');
+  const mi  = parseInt(parts[0]) - 1;
+  const day = parts[1] || '??';
+  const yr  = new Date().getFullYear();
+  const set  = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+
+  // 日期區（三版共用）
   set('pMonthLabel', (MEN[mi] || '???') + ' · ' + yr);
   set('pTitle',  (MZH[mi] || '?') + '月配息');
-  set('pM',  parts[0] || '?');
-  set('pD',  day);
-  set('pWD', '星 期 ' + wd);
-  set('pR1', r1);
-  set('pR2', r2);
-  // Starlight
+  set('pM', parts[0] || '?'); set('pD', day); set('pWD', '星 期 ' + wd);
   set('nMonthLabel', (MEN[mi] || '???') + ' · ' + yr);
-  set('nM',  parts[0] || '?');
-  set('nD',  day);
-  set('nWD', '星 期 ' + wd);
-  set('nR1', r1);
-  set('nR2', r2);
-  // Rose Mist
+  set('nM', parts[0] || '?'); set('nD', day); set('nWD', '星 期 ' + wd);
   set('rmMonthLabel', (MEN[mi] || '???') + ' · ' + yr);
-  set('rmDateNum',  parts[0] || '?');
-  set('rmDateNum2', day);
-  set('rmWeekday', '星 期 ' + wd);
-  set('rmRate1', r1);
-  set('rmRate2', r2);
+  set('rmDateNum', parts[0] || '?'); set('rmDateNum2', day); set('rmWeekday', '星 期 ' + wd);
+
+  // 基金名稱（晨曦用短名、夜空/玫瑰用全名）+ 費率
+  set('pName1', f1.nameShort); set('pR1', r1);
+  set('nName1', f1.name);      set('nR1', r1);
+  set('rmName1', f1.name);     set('rmRate1', r1);
+  if (fundCount === 2) {
+    set('pName2', f2.nameShort); set('pR2', r2);
+    set('nName2', f2.name);      set('nR2', r2);
+    set('rmName2', f2.name);     set('rmRate2', r2);
+  }
+
+  // 1 / 2 支版面：隱藏第二張卡片並置中第一張
+  const two = fundCount === 2;
+  ['pCard2','nCard2','rmCard2'].forEach(id => show(id, two));
+  // 晨曦 / 玫瑰為 2 欄 grid，單支時改單欄置中
+  const pF = document.getElementById('pFunds');
+  if (pF) pF.style.gridTemplateColumns = two ? '1fr 1fr' : '1fr';
+  const pC1 = document.getElementById('pCard1');
+  if (pC1) { pC1.style.maxWidth = two ? '' : '520px'; pC1.style.margin = two ? '' : '0 auto'; }
+  const rmF = document.getElementById('rmCards');
+  if (rmF) rmF.style.gridTemplateColumns = two ? '1fr 1fr' : '1fr';
+  const rmC1 = document.getElementById('rmCard1');
+  if (rmC1) { rmC1.style.maxWidth = two ? '' : '560px'; rmC1.style.margin = two ? '' : '0 auto'; }
 
   // LINE 文字
   const mb = document.getElementById('msgBox');
-  if (mb) mb.textContent = _buildMsg(MZH[mi] || '?', date, wd, r1, r2);
+  if (mb) mb.textContent = _buildMsg(MZH[mi] || '?', date, wd, f1, r1, f2, r2);
 }
 
-function _buildMsg(mzh, date, wd, r1, r2) {
+function _buildMsg(mzh, date, wd, f1, r1, f2, r2) {
+  let body = `▸ ${f1.nameShort}\n   年化約 ${r1}%`;
+  if (fundCount === 2) body += `\n\n▸ ${f2.nameShort}\n   年化約 ${r2}%`;
   return `📢【霸菱 ${mzh}月配息提醒】
 
 📅 配息基準日：${date}（${wd}）
 
-▸ 霸菱優先順位資產抵押債
-   年化約 ${r1}%
-
-▸ 霸菱環球非投資等級債
-   年化約 ${r2}%
+${body}
 
 詳情請見附圖 ⬇️
 
