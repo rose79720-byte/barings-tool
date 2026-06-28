@@ -159,6 +159,23 @@ body{background:var(--page-bg);font-family:'Inter','Noto Sans TC',sans-serif;col
 /* 手機版版面（待補你的 mobile 設計）*/
 .layout-mobile  .cs-main{display:flex;flex-direction:column;gap:16px;padding:16px}
 .layout-mobile  .cs-preview-col{order:-1}
+
+/* ── 讓沿用舊 class 的模組（compare）控制項融入 Creative Studio ── */
+#fieldsContainer .data-card{background:transparent;box-shadow:none;padding:0;margin:0;border-radius:0}
+#fieldsContainer .cmp-field{margin-bottom:14px}
+#fieldsContainer .cmp-field>label{font-size:12px;font-weight:600;color:var(--ink);display:block;margin-bottom:6px}
+#fieldsContainer .cmp-select,
+#fieldsContainer #cmpVPText{width:100%;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;font-family:inherit;outline:none;box-shadow:none}
+#fieldsContainer .cmp-select{height:38px;padding:0 10px;cursor:pointer}
+#fieldsContainer #cmpVPText{padding:8px 10px;font-weight:500;text-align:left}
+#fieldsContainer .cmp-dim-group{font-size:11px;font-weight:700;color:var(--ink);letter-spacing:.5px;margin:16px 0 8px}
+#fieldsContainer #cmpCoreChecks,#fieldsContainer #cmpRetChecks{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#fieldsContainer .cmp-checkrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:#fafafa;font-size:12.5px;font-weight:500;color:var(--muted-text);cursor:pointer;margin:0}
+#fieldsContainer .cmp-checkrow input{accent-color:var(--accent);width:15px;height:15px;flex-shrink:0}
+#fieldsContainer .cmp-warn{font-size:11px;color:#9aa3b2;margin-top:6px;line-height:1.5}
+#fieldsContainer .cmp-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid #f1f3f6}
+#fieldsContainer .cmp-toggle .lbl{font-size:13px;font-weight:600;color:var(--ink)}
+#fieldsContainer .cmp-toggle .hint{font-size:11px;color:var(--muted-text);margin-top:2px}
 </style>
 </head>
 <body>
