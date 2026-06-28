@@ -520,10 +520,17 @@ async function renderPreview() {
   if (!MOD || typeof html2canvas === 'undefined') return;
   const posterEl = MOD.getActivePosterEl(APP.template);
   if (!posterEl) return;
-  // 海報尺寸由模組決定（預設 1024×1024 方形；競品比較為 1920×1080 橫式）
-  const sz = MOD.POSTER || { w:1024, h:1024 };
+  // 海報尺寸由模組決定（方形 1024、橫式 1920×1080，或直式文件只給寬、高度自動量測）
+  const want = MOD.POSTER || { w:1024, h:1024 };
   const stage = document.getElementById('renderStage');
-  if (stage) { stage.style.width = sz.w + 'px'; stage.style.height = sz.h + 'px'; }
+  if (stage) { stage.style.width = want.w + 'px'; stage.style.height = (want.h || 6000) + 'px'; }
+  const sz = { w: want.w, h: want.h };
+  // 沒指定高度 → 量測海報實際高度（直式資訊文件，內容多寡會改變高度）
+  if (!sz.h) {
+    await new Promise(r => requestAnimationFrame(r));
+    sz.h = Math.ceil(posterEl.scrollHeight || posterEl.offsetHeight) || want.w;
+    if (stage) stage.style.height = sz.h + 'px';
+  }
   const dimLabel = document.getElementById('previewDim');
   if (dimLabel) dimLabel.textContent = `Preview · ${sz.w} × ${sz.h} px`;
   try {
