@@ -6,9 +6,8 @@
 <title>霸菱素材產生器</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <style>
 /* ===== Reset & Base ===== */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -545,7 +544,12 @@ function pickLayout() {
 MOBILE_QUERY.addEventListener('change', pickLayout);
 
 window.addEventListener('resize', scalePoster);
-window.addEventListener('load', () => { pickLayout(); bootstrap(); });
+// DOM 一就緒立即啟動，不等字型 / html2canvas / 圖片等外部資源
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { pickLayout(); bootstrap(); });
+} else {
+  pickLayout(); bootstrap();
+}
 </script>
 </body>
 </html>
