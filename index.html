@@ -296,12 +296,22 @@ function renderMaterialTabs() {
 // 渲染版型按鈕（色票 swatch 樣式）
 // ============================================================
 function renderTemplateButtons() {
-  const grid = document.getElementById('tplGrid');
+  const grid  = document.getElementById('tplGrid');
+  const card2 = document.querySelector('.cs-controls').children[1];
   grid.innerHTML = '';
   const m = MANIFEST[APP.material];
   if (!m) return;
-  document.getElementById('secTpl').textContent = SEC2_TITLE[APP.material] || '版型選擇';
 
+  // 模組自訂 ② 內容（bankTable→通路、compare→比較模式）
+  if (MOD && typeof MOD.renderStep2 === 'function') {
+    card2.style.display = '';
+    document.getElementById('secTpl').textContent = MOD.STEP2_TITLE || '選項';
+    MOD.renderStep2(grid);
+    return;
+  }
+
+  // 通用：版型色票 swatch（dividend）
+  document.getElementById('secTpl').textContent = SEC2_TITLE[APP.material] || '版型選擇';
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;gap:10px';
   m.templates.forEach(t => {
@@ -323,11 +333,23 @@ function renderTemplateButtons() {
     row.appendChild(btn);
   });
   grid.appendChild(row);
-
-  // 全部不可用 → 隱藏整個 ② 卡片標題列由 CSS 控制，這裡只隱藏按鈕列
-  document.querySelector('.cs-controls').children[1].style.display =
-    m.templates.every(t => !t.available) ? 'none' : '';
+  card2.style.display = m.templates.every(t => !t.available) ? 'none' : '';
 }
+
+// 設計樣式：② 大按鈕（通路 / 模式共用）
+function step2BigButton({ label, sub, active, onclick }) {
+  const btn = document.createElement('button');
+  btn.style.cssText =
+    'flex:1;border-radius:8px;padding:18px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--card);cursor:pointer;'
+    + (active
+        ? 'border:1.5px solid var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 18%,transparent);'
+        : 'border:1.5px solid var(--border);');
+  btn.innerHTML = `<span style="font-size:15px;font-weight:700;color:var(--ink)">${label}</span>`
+    + (sub ? `<span style="font-size:12px;font-weight:500;color:var(--muted-text)">${sub}</span>` : '');
+  btn.onclick = onclick;
+  return btn;
+}
+window.step2BigButton = step2BigButton;
 
 // ============================================================
 // 切換素材類型

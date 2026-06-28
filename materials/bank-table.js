@@ -92,63 +92,74 @@ const RATE_DEFS = {
   '台新': { fund1: { title:'（台新欄位待確認）', rows:[] }, fund2: { title:'', rows:[] } },
 };
 
+// 目前選定通路（取代原本的 #inChannel 下拉）
+let curChannel = '富邦';
+
 function _rateRows(rows) {
   return rows.map(r => `
-    <div class="rate-row">
-      <span class="rate-code">${r.code}</span>
-      <span class="rate-label">${r.label}</span>
-      <input class="rate-input" id="${r.id}" value="${r.def}"
-        oninput="onChannelChange(document.getElementById('inChannel').value)" type="text">
-      <span class="rate-pct">%</span>
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f1f3f6">
+      <span style="font-size:11px;font-weight:700;color:var(--ink);background:var(--accent-soft);border-radius:4px;padding:3px 7px;flex-shrink:0;font-variant-numeric:tabular-nums">${r.code}</span>
+      <span style="font-size:12.5px;color:var(--muted-text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.label}</span>
+      <span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0">
+        <input id="${r.id}" value="${r.def}" oninput="updatePoster()" type="text"
+          style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-weight:700;color:var(--ink);text-align:right;width:70px;font-family:inherit;outline:none;font-variant-numeric:tabular-nums">
+        <span style="font-size:12px;color:var(--muted-text)">%</span>
+      </span>
     </div>`).join('');
 }
 
+// ② 通路選擇（台新 / 富邦）— 由 index.html 呼叫
+export const STEP2_TITLE = '通路選擇';
+export function renderStep2(grid) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:10px';
+  ['台新', '富邦'].forEach(ch => {
+    row.appendChild(window.step2BigButton({
+      label: ch,
+      active: ch === curChannel,
+      onclick: () => window.onChannelChange(ch),
+    }));
+  });
+  grid.appendChild(row);
+}
+
 export function renderFields(container) {
-  const ch  = '富邦';
-  const def = RATE_DEFS[ch];
+  const def = RATE_DEFS[curChannel] || RATE_DEFS['富邦'];
+  const subhead = (t) => `<div style="font-size:11px;font-weight:700;color:var(--ink);letter-spacing:.5px;margin:14px 0 4px">📊 ${t}</div>`;
   container.innerHTML = `
-    <div class="data-card">
-      <div class="data-row">
-        <span class="data-label">銷售通路</span>
-        <select class="data-input" id="inChannel" style="width:100px;cursor:pointer"
-          onchange="onChannelChange(this.value)">
-          <option>富邦</option><option>台新</option>
-        </select>
-      </div>
-      <div class="rate-subhead">📊 ${def.fund1.title}</div>
+    <div>
+      ${subhead(def.fund1.title)}
       ${_rateRows(def.fund1.rows)}
-      <div class="rate-subhead">📊 ${def.fund2.title}</div>
-      ${_rateRows(def.fund2.rows)}
-      <div class="data-row" style="padding:8px 0">
-        <span style="color:#9ca3af;font-size:11px">
-          💡 每月查詢最新費率後填入，海報即時更新
-        </span>
-      </div>
+      ${def.fund2.rows.length ? subhead(def.fund2.title) + _rateRows(def.fund2.rows) : ''}
+      <div style="font-size:11px;color:#9aa3b2;margin-top:12px">💡 每月查詢最新費率後填入，海報即時更新</div>
     </div>`;
-  document.getElementById('secFields').textContent = '③ 費率填寫（每月更新）';
+  document.getElementById('secFields').textContent = '費率填寫';
 }
 
 // ============================================================
-// 渲染 LINE 罐頭文字區
+// 渲染 LINE 訊息區（整張卡片內容）
 // ============================================================
 export function renderMsg(container) {
   container.innerHTML = `
-    <div class="sec-title">⑤ LINE 罐頭文字</div>
-    <div class="msg-box" id="msgBox"></div>
-    <div class="btn-row">
-      <button class="btn btn-copy" onclick="copyMsg()">📋 複製文字</button>
-    </div>`;
+    <div class="cs-cardhead"><div class="cs-num">4</div><div class="cs-cardtitle">LINE 訊息</div></div>
+    <div id="msgBox" style="background:#f7f9fc;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;font-variant-numeric:tabular-nums"></div>
+    <button onclick="copyMsg()" style="margin-top:10px;width:100%;height:38px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px">📋 複製文字</button>`;
 }
 
 // ============================================================
-// 通路切換：更新費率欄位 + 海報 + LINE 文字
+// 通路切換：更新 ②/③ + 海報 + LINE 文字 + 抓費率
 // ============================================================
 export async function onChannelChange(channel, SCRIPT) {
+  curChannel = channel;
   const tplKey = { '富邦':'fubon', '台新':'tashin' }[channel] || 'wip';
+  renderStep2(_clear(document.getElementById('tplGrid')));   // 更新 ② active
+  renderFields(document.getElementById('fieldsContainer'));   // 更新 ③ 費率列
   showPoster(tplKey);
   _updateBankMsg(channel);
   await _fetchBankRates(channel, SCRIPT);
 }
+
+function _clear(el) { if (el) el.innerHTML = ''; return el; }
 
 // ============================================================
 // fetchData（bankTable 不自動 fetch，由 onChannelChange 驅動）
@@ -161,8 +172,7 @@ export async function fetchData(SCRIPT) {
 // update（從費率輸入欄同步到海報 span）
 // ============================================================
 export function update() {
-  const channel = document.getElementById('inChannel')?.value || '富邦';
-  _updateBankPoster(channel);
+  _updateBankPoster(curChannel);
 }
 
 const BANK_CODE_MAP = {
