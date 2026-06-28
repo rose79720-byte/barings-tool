@@ -222,8 +222,9 @@ body{background:var(--page-bg);font-family:'Inter','Noto Sans TC',sans-serif;col
   </div>
 </div>
 
-<!-- 海報在畫面外以全尺寸渲染，供 html2canvas 擷取（preview 與下載皆用此結果）-->
-<div id="renderStage" style="position:fixed;left:-10000px;top:0;width:1024px;height:1024px;overflow:hidden;pointer-events:none">
+<!-- 海報以全尺寸渲染供 html2canvas 擷取（preview 與下載皆用此結果）。
+     用 opacity:0 隱藏並保持在座標 (0,0)，避免離畫面位置造成 html2canvas 擷取裁切 -->
+<div id="renderStage" style="position:fixed;left:0;top:0;width:1024px;height:1024px;overflow:hidden;pointer-events:none;opacity:0;z-index:-1">
   <div id="scaleWrap"><!-- 海報由模組注入 --></div>
 </div>
 
