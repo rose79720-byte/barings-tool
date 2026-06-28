@@ -118,7 +118,7 @@ export const CSS = `
 /* header */
 #poster-compare .cmp-header{display:flex;align-items:center;justify-content:space-between;gap:24px;box-sizing:border-box;}
 #poster-compare .cmp-headleft{display:flex;align-items:center;gap:22px;}
-#poster-compare .cmp-logo{width:200px;height:56px;flex:none;border:1px dashed #c9cdd6;border-radius:6px;}
+#poster-compare .cmp-logo{width:200px;height:56px;flex:none;object-fit:contain;object-position:left center;display:block;}
 #poster-compare .cmp-vrule{width:1px;height:44px;background:#dde0e6;}
 #poster-compare .cmp-eyebrow{font:600 16px 'Noto Sans TC',sans-serif;letter-spacing:.22em;color:#b08a2e;}
 #poster-compare .cmp-date{flex:none;display:flex;align-items:center;gap:8px;border:1px solid #dde0e6;border-radius:999px;padding:9px 18px;font:500 15px 'Noto Sans TC',sans-serif;color:#5b6573;white-space:nowrap;}
@@ -229,7 +229,7 @@ export const HTML = `
 
   <div class="cmp-header">
     <div class="cmp-headleft">
-      <div class="cmp-logo"></div>
+      <img class="cmp-logo" src="./assets/barings-logo.png" alt="Barings">
       <div class="cmp-vrule"></div>
       <div class="cmp-eyebrow">債券基金・核心比較</div>
     </div>
