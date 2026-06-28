@@ -448,15 +448,10 @@ async function downloadJPG() {
     // 下載就是 preview 所顯示的那張圖（同一個 canvas）→ 兩者必定一致
     if (!_lastCanvas) await renderPreview();
     if (!_lastCanvas) { toast('⚠️ 尚無法產生圖片，請稍候再試'); return; }
-    const out = document.createElement('canvas');
-    out.width = 1080; out.height = 1080;
-    const ctx = out.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(_lastCanvas, 0, 0, 1080, 1080);
+    // 直接輸出渲染好的 canvas（已 scale:2 高解析，並保留素材原生長寬比）
     const a = document.createElement('a');
     a.download = MOD.getDownloadFileName(APP);
-    a.href = out.toDataURL('image/jpeg', 0.95);
+    a.href = _lastCanvas.toDataURL('image/jpeg', 0.95);
     a.click();
     toast('✅ JPG 已下載');
   } catch(e) { toast('❌ 產圖失敗'); }
@@ -508,11 +503,17 @@ async function renderPreview() {
   if (!MOD || typeof html2canvas === 'undefined') return;
   const posterEl = MOD.getActivePosterEl(APP.template);
   if (!posterEl) return;
+  // 海報尺寸由模組決定（預設 1024×1024 方形；競品比較為 1920×1080 橫式）
+  const sz = MOD.POSTER || { w:1024, h:1024 };
+  const stage = document.getElementById('renderStage');
+  if (stage) { stage.style.width = sz.w + 'px'; stage.style.height = sz.h + 'px'; }
+  const dimLabel = document.getElementById('previewDim');
+  if (dimLabel) dimLabel.textContent = `Preview · ${sz.w} × ${sz.h} px`;
   try {
     if (MOD.FONTS) { try { await Promise.all(MOD.FONTS.map(f => document.fonts.load(f))); } catch(e) {} }
     await document.fonts.ready;
     const canvas = await html2canvas(posterEl, {
-      width:1024, height:1024, scale:2, useCORS:true, allowTaint:true,
+      width:sz.w, height:sz.h, scale:2, useCORS:true, allowTaint:true,
       backgroundColor:null, logging:false,
       onclone: (doc) => MOD.onDownloadClone(doc, APP.template),
     });
