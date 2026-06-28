@@ -382,8 +382,7 @@ async function onMaterialChange(key) {
 // ============================================================
 function selectTpl(tplKey) {
   APP.template = tplKey;
-  document.querySelectorAll('.tpl-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.tpl === tplKey));
+  renderTemplateButtons();   // 重繪 ② 以更新選中框（新設計用 inline 樣式畫框）
   requestAnimationFrame(() => {
     if (MOD) MOD.showPoster(tplKey);
     scalePoster();
@@ -519,19 +518,7 @@ function scalePoster() {
 // ============================================================
 // 啟動
 // ============================================================
-// 用 FontFace API 把自帶字型註冊進 document.fonts
-// （比注入 @font-face CSS 更可靠，html2canvas 下載時能確實取用）
-async function registerLocalFonts() {
-  const faces = [
-    new FontFace('PlayfairLocal', 'url(./assets/fonts/playfair-600-latin.woff2)', { weight: '600', style: 'normal' }),
-  ];
-  for (const ff of faces) {
-    try { document.fonts.add(await ff.load()); } catch(e) {}
-  }
-}
-
 async function bootstrap() {
-  await registerLocalFonts();
   await loadManifest();
   await loadMaterial('dividend');
   renderMaterialTabs();
@@ -540,9 +527,8 @@ async function bootstrap() {
   MOD.renderMsg(document.getElementById('msgSection'));
   MOD.showPoster(APP.template);
   scalePoster();
-  // 頁面載入即預載素材字型，確保 html2canvas 下載時可用
-  if (MOD.FONTS) { try { await Promise.all(MOD.FONTS.map(f => document.fonts.load(f))); } catch(e) {} }
-  await init();
+  // 海報已先顯示；資料抓取在背景進行，不阻塞畫面（抓到後自動更新費率）
+  init();
 }
 
 // ============================================================
