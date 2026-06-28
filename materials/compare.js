@@ -193,6 +193,25 @@ function competitorPool() {
 // ============================================================
 // 渲染左側控制區
 // ============================================================
+// ② 選擇比較模式（1v1 / 1v1v1）— 由 index.html 呼叫
+export const STEP2_TITLE = '選擇比較模式';
+export function renderStep2(grid) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:10px';
+  [{ key:'1v1', big:'1 vs 1', sub:'一對一比較' },
+   { key:'1v1v1', big:'1 vs 1 vs 1', sub:'一對二比較' }].forEach(m => {
+    row.appendChild(window.step2BigButton({
+      label: m.big, sub: m.sub, active: S.mode === m.key,
+      onclick: () => {
+        S.mode = m.key;
+        const g = document.getElementById('tplGrid'); g.innerHTML = ''; renderStep2(g);
+        renderFields(document.getElementById('fieldsContainer'));
+      },
+    }));
+  });
+  grid.appendChild(row);
+}
+
 export function renderFields(container) {
   // 預設值：主打 = 第一檔霸菱；競品 = 前兩檔同類別競品
   if (!S.lead) {
@@ -209,14 +228,6 @@ export function renderFields(container) {
       <div class="cmp-field cmp-lead">
         <label>★ 主打基金（霸菱）</label>
         <select class="cmp-select" id="cmpLead"></select>
-      </div>
-
-      <div class="cmp-field">
-        <label>比較模式</label>
-        <div class="cmp-mode-row">
-          <button class="cmp-mode-btn" data-mode="1v1">1 v 1</button>
-          <button class="cmp-mode-btn" data-mode="1v1v1">1 v 1 v 1</button>
-        </div>
       </div>
 
       <div class="cmp-field">
