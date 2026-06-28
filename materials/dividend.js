@@ -733,6 +733,10 @@ export function renderFields(container) {
     const f2 = document.getElementById('inFund2'); if (f2) f2.value = sel2;
     const r2 = document.getElementById('inRate2'); if (r2 && (!r2.value || r2.value === '…')) r2.value = fundById(sel2).defRate;
   }
+
+  // 套用快取（上次抓到的資料）→ 回訪者立刻看到值，不用等 API
+  const cached = _loadCache();
+  if (cached) _applyData(cached); else update();
 }
 
 // 由 ③ 的「1/2 支」按鈕呼叫（全域 hook）
@@ -755,18 +759,29 @@ export function renderMsg(container) {
 }
 
 // ============================================================
-// 從 API 取得資料並填入表單
+// 資料快取（localStorage）+ 從 API 取得資料
 // ============================================================
-export async function fetchData(SCRIPT) {
-  const r = await fetch(SCRIPT + '?action=getAll');
-  const d = await r.json();
-  const inDate = document.getElementById('inDate');     if (inDate) inDate.value = d.date || '';
-  const inWd   = document.getElementById('inWeekday');  if (inWd)   inWd.value   = d.weekday || '';
+const CACHE_KEY = 'barings_dividend_data';
+function _saveCache(d) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch(e) {} }
+function _loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch(e) { return null; } }
+
+// 把一筆資料填入欄位並重繪海報
+function _applyData(d) {
+  if (!d) return;
+  const inDate = document.getElementById('inDate');     if (inDate && d.date)    inDate.value = d.date;
+  const inWd   = document.getElementById('inWeekday');  if (inWd   && d.weekday) inWd.value   = d.weekday;
   const r1 = document.getElementById('inRate1'); if (r1 && d.fund1?.rate) r1.value = d.fund1.rate;
   const r2 = document.getElementById('inRate2'); if (r2 && d.fund2?.rate) r2.value = d.fund2.rate;
   const s1 = document.getElementById('sub1'); if (s1) s1.textContent = d.fund1?.asOf ? '資料日期：' + d.fund1.asOf : '';
   const s2 = document.getElementById('sub2'); if (s2) s2.textContent = d.fund2?.asOf ? '資料日期：' + d.fund2.asOf : '';
   update();
+}
+
+export async function fetchData(SCRIPT) {
+  const r = await fetch(SCRIPT + '?action=getAll');
+  const d = await r.json();
+  _saveCache(d);     // 存快取供下次即時顯示
+  _applyData(d);
 }
 
 // ============================================================
