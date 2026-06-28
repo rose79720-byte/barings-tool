@@ -519,7 +519,19 @@ function scalePoster() {
 // ============================================================
 // 啟動
 // ============================================================
+// 用 FontFace API 把自帶字型註冊進 document.fonts
+// （比注入 @font-face CSS 更可靠，html2canvas 下載時能確實取用）
+async function registerLocalFonts() {
+  const faces = [
+    new FontFace('PlayfairLocal', 'url(./assets/fonts/playfair-600-latin.woff2)', { weight: '600', style: 'normal' }),
+  ];
+  for (const ff of faces) {
+    try { document.fonts.add(await ff.load()); } catch(e) {}
+  }
+}
+
 async function bootstrap() {
+  await registerLocalFonts();
   await loadManifest();
   await loadMaterial('dividend');
   renderMaterialTabs();
