@@ -62,6 +62,8 @@ export const FONTS = [ '700 30px "Noto Serif TC"', '700 42px "Inter"', '600 14px
 // ============================================================
 export const CSS = `
 #poster-taishin{ width:1080px; background:#fff; padding:44px 46px; box-sizing:border-box; }
+/* 修正：富邦的全域 .nm（深色）會洩漏到台新卡片字名，強制白字 */
+#poster-taishin .ch .nm{ color:#fff !important; }
 .fc{
   --navy:#15294C; --navy-line:rgba(255,255,255,.14);
   --gold:#A9822B; --gold-2:#C9A227; --gold-soft:#F8F1DA; --gold-border:#E4CF8E;
