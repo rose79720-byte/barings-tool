@@ -215,6 +215,8 @@ export const CSS = `
 #poster-compare.cmp-2col{--cmp-label:170px;--cmp-band-left:170px;--cmp-band-width:calc((100% - 170px)/2);}
 #poster-compare.cmp-2col .cmp-row{grid-template-columns:var(--cmp-label) 1fr 1fr;}
 #poster-compare.cmp-2col [data-col="comp2"]{display:none;}
+/* 投資特色列的 cell 規則特異度較高，需更精確的隱藏規則才能藏住 1v1 的第二競品 */
+#poster-compare.cmp-2col .cmp-row[data-dim="features"] [data-col="comp2"]{display:none;}
 
 /* 單列隱藏 */
 #poster-compare .cmp-row.cmp-hidden{display:none;}
