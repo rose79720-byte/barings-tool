@@ -20,12 +20,18 @@
 - [ ] **可編輯簡報檔（PPTX）** — 目前輸出圖片；客戶情境是放進簡報。用 PptxGenJS 在前端產原生 .pptx（原生表格＋文字框＋色塊，可在 PowerPoint 直接改）。同一份資料餵「圖片」與「PPTX」兩個輸出。
 - [ ] （可選）PNG 高解析輸出選項（文字比 JPG 更銳利）。
 
-## B. AI / LLM 串接
-- [ ] **串接 Claude API（`claude-opus-4-8`）** 取代目前 hardcode 的價值主張下拉。
+## B. AI / LLM 串接 — 🚫 demo 不做，第二階段升級項目（需求驅動）
+> 決策（2026-08）：demo 階段先不做 AI。改走 0727 note item 4「人工可編輯欄位」（見 §C 人工 curate）。
+> 理由：(1) 客戶 0727 note 自己要求「拿掉 AI、PIC 自行輸入」；(2) demo 塞 AI 有合規風險（可能生成保證/最佳等字眼或錯誤特色，在客戶/法遵前翻車）；(3) 相依未到位——需真數據 grounding + GAS 代理 + API key；(4) 人工可編輯欄位本身就是誠實好用的 demo 版本。
+> 升級觸發條件（三者到齊才做）：① MoneyDJ 真數據在跑可 grounding；② 法遵表態 AI 能碰/不能碰什麼；③ 客戶主動開口要。
+> demo 銷售話術：不做但可「講」——收尾提一句「第二階段可接 AI 生成建議草稿、人工核可」，展現 roadmap 又不扛風險。
+> 選型結論：若要做，用 Claude Sonnet 5（近 Opus 品質、便宜、繁中+合規可控性佳、Claude Code 開發最順）；成本在此用量是雜訊（每月個位數美金），別用價格選型。Gemini Flash 帳面最便宜且 GAS 整合最省事，是備選。
+- [ ] **串接 Claude API（`claude-sonnet-5`，或 Opus 4.8 求最高品質）** 取代目前 hardcode 的價值主張下拉。
   - 放在 **GAS（UrlFetchApp）當代理**，API key 存 Script Properties，不進前端／git。
   - 用 **Structured Outputs（JSON schema）**，只擬軟性維度：利率敏感度、投資特色 bullets、價值主張。
   - 合規護欄：禁止 AI 生成／修改任何數字、禁用保證/最佳等字眼、警語由人工填；輸出標記「AI 草稿待人工核可」。
   - 把抓到的真數據當 grounding 餵進去，避免幻覺。
+  - 介面：AI 生成建議 → 填進 item 4 的可編輯欄位 → PIC 編輯後拍板。地基（可編輯欄位）在 demo 就先做好，AI 這層之後直接插上。
 
 ## C. 真實資料串接（取代 mock）
 - [ ] **MoneyDJ 真值接入**（經 GAS、Big5 解碼）：報酬率、波動度、Sharpe/Beta、配息率、基本資料（投資標的/區域/規模/RR/幣別）、持股配置 → 填進 `compare.js` 取代 `MOCK`。
