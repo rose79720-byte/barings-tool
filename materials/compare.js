@@ -86,14 +86,9 @@ const MOCK = {
   },
 };
 
-// 價值主張範本（hardcode；之後可串 AI）
-const VALUE_PROPS = [
-  '穩定度・抗波動・利率風險 — 三檔債券基金，一次看懂',
-  '低波動、低回撤，攻守兼備的核心配置',
-  '優先順位有擔保，清償順位高，收益穩定度佳',
-  '浮動利率為主，利率敏感度低，適合升息環境',
-  '同類型中波動最低，風險調整後報酬突出',
-];
+// item4：中性通用預設（自行改寫）。刻意不放具體訴求，放哪一檔／哪一欄都不會怪。
+const DEFAULT_TITLE = '基金特色比較';
+const DEFAULT_FEATURES = ['投資策略說明', '風險屬性說明', '收益來源說明'];
 
 // ------------------------------------------------------------
 // 模組狀態
@@ -103,7 +98,8 @@ const S = {
   mode: '1v1v1',          // '1v1' | '1v1v1'
   showAllCat: false,
   dims: Object.fromEntries(ALL_DIMS.map(d => [d.key, true])),
-  valueProp: VALUE_PROPS[0],
+  valueProp: DEFAULT_TITLE,
+  features: {},           // item4：自行輸入的投資特色（key=fund_id → string[]）；未編輯則回退中性通用預設
   crown: false,           // 「綜合表現領先」徽章（合規預設關）
 };
 
@@ -382,6 +378,8 @@ function competitorPool() {
   });
 }
 function dataOf(id) { return MOCK[id] || {}; }
+// item4：投資特色以手動輸入為準，未編輯則回退中性通用預設（每檔/每欄相同，放哪都不怪）
+function featuresOf(id) { return S.features[id] ?? DEFAULT_FEATURES; }
 function num(v) {
   if (v == null) return null;
   const m = String(v).replace(/[^\d.\-]/g, '');
@@ -417,7 +415,7 @@ export function renderStep2(grid) {
             S.comp2 = competitorPool().find(f => f.fund_id !== S.comp1)?.fund_id || null;
           }
           renderStep2(grid);
-          _applyModeUI(); _refreshSelects();
+          _applyModeUI(); _refreshSelects(); _renderFeatureEditors();
           if (window.updatePoster) window.updatePoster(); else update();
         },
       });
@@ -463,11 +461,14 @@ export function renderFields(container) {
     <div class="cmp-warn" style="margin-top:6px">＊「自訂區間」起算點需法遵確認，預設採今年以來（YTD）</div>
 
     <div class="cmp-field" style="margin-top:14px">
-      <label>價值主張／標題（範本，可自行編輯）</label>
-      <select class="cmp-select" id="cmpVPSelect"></select>
-      <input class="data-input" id="cmpVPText" style="width:100%;text-align:left;margin-top:8px"
-        placeholder="或自行輸入標題…">
+      <label>價值主張／標題（自行輸入）</label>
+      <input class="data-input" id="cmpVPText" style="width:100%;text-align:left"
+        placeholder="輸入標題…">
     </div>
+
+    <div class="cmp-dim-group">投資特色（自行輸入）</div>
+    <div id="cmpFeatEdit"></div>
+
     <div class="cmp-toggle">
       <div>
         <div class="lbl">「綜合表現領先」徽章</div>
@@ -485,17 +486,11 @@ export function renderFields(container) {
   CORE_DIMS.forEach(d => container.querySelector('#cmpCoreChecks').appendChild(mkCheck(d)));
   RET_DIMS.forEach(d => container.querySelector('#cmpRetChecks').appendChild(mkCheck(d)));
 
-  const vpSel = container.querySelector('#cmpVPSelect');
-  VALUE_PROPS.forEach(v => {
-    const o = document.createElement('option');
-    o.value = v; o.textContent = v.length > 24 ? v.slice(0, 24) + '…' : v;
-    vpSel.appendChild(o);
-  });
-  vpSel.value = S.valueProp;
+  container.querySelector('#cmpVPText').value = S.valueProp;
   container.querySelector('#cmpAllCat').checked = S.showAllCat;
   container.querySelector('#cmpCrown').checked = S.crown;
 
-  _refreshSelects(); _applyModeUI(); _wireEvents(container);
+  _refreshSelects(); _applyModeUI(); _wireEvents(container); _renderFeatureEditors();
   update();
 }
 
@@ -533,14 +528,14 @@ function _wireEvents(c) {
     if (!pool.find(f => f.fund_id === S.comp1)) S.comp1 = pool[0]?.fund_id || null;
     if (!pool.find(f => f.fund_id === S.comp2) || S.comp2 === S.comp1)
       S.comp2 = pool.find(f => f.fund_id !== S.comp1)?.fund_id || null;
-    _refreshSelects(); upd();
+    _refreshSelects(); _renderFeatureEditors(); upd();
   });
   c.querySelector('#cmpComp1').addEventListener('change', e => {
     S.comp1 = e.target.value;
     if (S.comp2 === S.comp1) S.comp2 = competitorPool().find(f => f.fund_id !== S.comp1)?.fund_id || null;
-    _refreshSelects(); upd();
+    _refreshSelects(); _renderFeatureEditors(); upd();
   });
-  c.querySelector('#cmpComp2').addEventListener('change', e => { S.comp2 = e.target.value; _refreshSelects(); upd(); });
+  c.querySelector('#cmpComp2').addEventListener('change', e => { S.comp2 = e.target.value; _refreshSelects(); _renderFeatureEditors(); upd(); });
   c.querySelector('#cmpAllCat').addEventListener('change', e => {
     S.showAllCat = e.target.checked;
     c.querySelector('#cmpCatWarn').style.display = e.target.checked ? '' : 'none';
@@ -548,13 +543,38 @@ function _wireEvents(c) {
   });
   c.querySelectorAll('input[data-dim]').forEach(cb =>
     cb.addEventListener('change', () => { S.dims[cb.dataset.dim] = cb.checked; upd(); }));
-  c.querySelector('#cmpVPSelect').addEventListener('change', e => {
-    S.valueProp = e.target.value; c.querySelector('#cmpVPText').value = ''; upd();
-  });
   c.querySelector('#cmpVPText').addEventListener('input', e => {
-    S.valueProp = e.target.value.trim() || c.querySelector('#cmpVPSelect').value; upd();
+    S.valueProp = e.target.value; upd();
   });
   c.querySelector('#cmpCrown').addEventListener('change', e => { S.crown = e.target.checked; upd(); });
+}
+
+// item4：依目前參與比較的基金，動態產生「投資特色」可編輯欄位（一檔一個 textarea）
+function _renderFeatureEditors() {
+  const wrap = document.getElementById('cmpFeatEdit');
+  if (!wrap) return;
+  const cols = [['lead', S.lead, '★ 主打'], ['comp1', S.comp1, '競品 1']];
+  if (S.mode === '1v1v1') cols.push(['comp2', S.comp2, '競品 2']);
+  wrap.innerHTML = cols.map(([col, id, tag]) => {
+    const f = fundById(id);
+    const name = f ? f.display_name_zh : '—';
+    const val = esc(featuresOf(id).join('\n'));
+    return `<div class="cmp-field" style="margin-top:10px">
+      <label>${tag}投資特色 · ${esc(name)}</label>
+      <textarea class="data-input" data-feat-col="${col}" rows="3"
+        style="width:100%;text-align:left;resize:vertical;line-height:1.5;font-family:inherit"
+        placeholder="輸入投資特色…">${val}</textarea>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('textarea[data-feat-col]').forEach(ta => {
+    ta.addEventListener('input', e => {
+      const col = e.target.dataset.featCol;
+      const id = col === 'lead' ? S.lead : col === 'comp1' ? S.comp1 : S.comp2;
+      if (!id) return;
+      S.features[id] = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+      window.updatePoster ? window.updatePoster() : update();
+    });
+  });
 }
 
 // ============================================================
@@ -607,7 +627,7 @@ export function update() {
       const cell = root.querySelector(`.cmp-cell[data-col="${col}"][data-dim="${dim.key}"]`);
       if (!cell) return;
       const d = dataOf(id);
-      const v = d[dim.key];
+      const v = dim.key === 'features' ? featuresOf(id) : d[dim.key];
       cell.classList.remove('cmp-neg');
       // 移除舊的領先勾選
       cell.querySelectorAll('.cmp-win').forEach(w => w.remove());
@@ -648,7 +668,7 @@ export function update() {
   // 結論條列 = 主打投資特色
   const cbull = root.querySelector('.cmp-cbull');
   if (cbull) {
-    const f = (dataOf(S.lead).features || []);
+    const f = featuresOf(S.lead);
     cbull.innerHTML = f.length ? f.map(x => `<li>${esc(x)}</li>`).join('') : '';
   }
 
