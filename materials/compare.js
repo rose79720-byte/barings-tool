@@ -100,6 +100,8 @@ const S = {
   dims: Object.fromEntries(ALL_DIMS.map(d => [d.key, true])),
   valueProp: DEFAULT_TITLE,
   features: {},           // item4：自行輸入的投資特色（key=fund_id → string[]）；未編輯則回退中性通用預設
+  showLogo: true,         // item1：LOGO 顯示開關（保留開關、預設開啟）
+  showWin: true,          // item2：勝出勾選（✔）顯示開關（保留開關、預設開啟）
   crown: false,           // 「綜合表現領先」徽章（合規預設關）
 };
 
@@ -115,6 +117,8 @@ export const CSS = `
 #poster-compare .cmp-header{display:flex;align-items:center;justify-content:space-between;gap:24px;box-sizing:border-box;}
 #poster-compare .cmp-headleft{display:flex;align-items:center;gap:22px;}
 #poster-compare .cmp-logo{width:200px;height:56px;flex:none;object-fit:contain;object-position:left center;display:block;}
+/* item1：關閉 LOGO 時，連同旁邊的分隔線一起隱藏 */
+#poster-compare.cmp-nologo .cmp-logo,#poster-compare.cmp-nologo .cmp-vrule{display:none;}
 #poster-compare .cmp-vrule{width:1px;height:44px;background:#dde0e6;}
 #poster-compare .cmp-eyebrow{font:600 16px 'Noto Sans TC',sans-serif;letter-spacing:.22em;color:#b08a2e;}
 #poster-compare .cmp-date{flex:none;display:flex;align-items:center;gap:8px;border:1px solid #dde0e6;border-radius:999px;padding:9px 18px;font:500 15px 'Noto Sans TC',sans-serif;color:#5b6573;white-space:nowrap;}
@@ -471,6 +475,20 @@ export function renderFields(container) {
 
     <div class="cmp-toggle">
       <div>
+        <div class="lbl">顯示 LOGO</div>
+        <div class="hint">預設開啟</div>
+      </div>
+      <label class="cmp-switch"><input type="checkbox" id="cmpLogo"><span class="slider"></span></label>
+    </div>
+    <div class="cmp-toggle">
+      <div>
+        <div class="lbl">顯示勝出勾選（✔）</div>
+        <div class="hint">各維度領先者標記；預設開啟</div>
+      </div>
+      <label class="cmp-switch"><input type="checkbox" id="cmpWin"><span class="slider"></span></label>
+    </div>
+    <div class="cmp-toggle">
+      <div>
         <div class="lbl">「綜合表現領先」徽章</div>
         <div class="hint">合規考量，預設關閉</div>
       </div>
@@ -488,6 +506,8 @@ export function renderFields(container) {
 
   container.querySelector('#cmpVPText').value = S.valueProp;
   container.querySelector('#cmpAllCat').checked = S.showAllCat;
+  container.querySelector('#cmpLogo').checked = S.showLogo;
+  container.querySelector('#cmpWin').checked = S.showWin;
   container.querySelector('#cmpCrown').checked = S.crown;
 
   _refreshSelects(); _applyModeUI(); _wireEvents(container); _renderFeatureEditors();
@@ -546,6 +566,8 @@ function _wireEvents(c) {
   c.querySelector('#cmpVPText').addEventListener('input', e => {
     S.valueProp = e.target.value; upd();
   });
+  c.querySelector('#cmpLogo').addEventListener('change', e => { S.showLogo = e.target.checked; upd(); });
+  c.querySelector('#cmpWin').addEventListener('change', e => { S.showWin = e.target.checked; upd(); });
   c.querySelector('#cmpCrown').addEventListener('change', e => { S.crown = e.target.checked; upd(); });
 }
 
@@ -599,6 +621,7 @@ export function update() {
 
   root.classList.toggle('cmp-2col', S.mode === '1v1');
   root.classList.toggle('cmp-badge-on', S.crown);
+  root.classList.toggle('cmp-nologo', !S.showLogo);
 
   // 標題
   const title = root.querySelector('.cmp-title');
@@ -645,8 +668,8 @@ export function update() {
     });
   });
 
-  // 領先勾選（每個有規則的維度，在參與比較的基金中找最佳者）
-  Object.entries(WIN_RULE).forEach(([key, rule]) => {
+  // 領先勾選（每個有規則的維度，在參與比較的基金中找最佳者）；item2：可由開關關閉
+  if (S.showWin) Object.entries(WIN_RULE).forEach(([key, rule]) => {
     if (!S.dims[key]) return;
     let best = null, bestVal = null;
     funds.forEach(id => {
