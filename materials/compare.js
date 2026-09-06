@@ -24,10 +24,13 @@ export const FONTS = [
 export const STEP2_TITLE = '選擇比較模式';
 
 // 種子基金主檔（registry）。module import 時即載入。
-const REGISTRY = await fetch('./data/funds.json')
+// 以 MoneyDJ code 當 fund_id（與 getFunds/getCompare 一致）。初始用 funds.json 種子，
+// fetchData() 會用 GAS getFunds（客戶維護的上架清單）覆蓋。
+let REGISTRY = await fetch('./data/funds.json')
   .then(r => r.json())
-  .then(d => d.funds)
+  .then(d => d.funds.map(f => ({ ...f, fund_id: f.moneydj_code })))
   .catch(() => []);
+let REAL = {};   // 真值快取（key = MoneyDJ code）：getCompare 抓到的 vol/報酬率覆蓋 MOCK
 
 // ------------------------------------------------------------
 // 比較維度
@@ -72,21 +75,21 @@ const WIN_SVG = '<span class="cmp-win"><svg viewBox="0 0 24 24" fill="none" stro
 // 未列出的基金以 '—' 顯示。
 // ------------------------------------------------------------
 const MOCK = {
-  barings_plb04: {
+  PLB04: {
     target: '優先順位資產抵押債券／貸款（有擔保、清償順位高）',
     vol: '2.02%', rate_sens: '低', credit: 'BBB-',
     yield: '6.35%', maxdd: '-4.12%', duration: '2.50年',
     features: ['浮動利率為主，抗利率風險佳', '優先順位、有擔保，清償順位高', '收益穩定，波動度低'],
     custom: '2.81%', y1: '7.24%', y2: '8.67%', y3: '7.98%',
   },
-  pimco_diversified_income_pim41: {
+  PIM41: {
     target: '全球多元債券（投資級／高收益／新興）',
     vol: '4.88%', rate_sens: '中高', credit: 'BB+',
     yield: '5.20%', maxdd: '-10.35%', duration: '5.25年',
     features: ['全球多元配置，追求更高收益', '靈活操作，橫跨市場機會', '資本利得機會較高'],
     custom: '-0.23%', y1: '5.12%', y2: '6.21%', y3: '5.34%',
   },
-  gs_us_dollar_credit_anz91: {
+  ANZ91: {
     target: '全球投資等級公司債（高信評為主）',
     vol: '3.25%', rate_sens: '中', credit: 'A-',
     yield: '4.15%', maxdd: '-6.21%', duration: '6.65年',
@@ -364,7 +367,7 @@ function competitorPool() {
     return lead && f.category === lead.category;
   });
 }
-function dataOf(id) { return MOCK[id] || {}; }
+function dataOf(id) { return { ...(MOCK[id] || {}), ...(REAL[id] || {}) }; }
 // item4：投資特色以手動輸入為準，未編輯則回退中性通用預設（每檔/每欄相同，放哪都不怪）
 function featuresOf(id) { return S.features[id] ?? DEFAULT_FEATURES; }
 // 平均信評／存續期間：MoneyDJ HTML 抓不到，人工填為準；未編輯回退 MOCK（demo 保持完整）
@@ -440,7 +443,9 @@ export function renderStep2(grid) {
 // ============================================================
 // step③：資料 / 設定面板
 // ============================================================
+let _fields = null;   // 記住面板容器，fetchData() 拿到 getFunds 後可重繪下拉
 export function renderFields(container) {
+  _fields = container;
   if (!S.lead) {
     S.lead = (REGISTRY.find(f => f.is_barings) || REGISTRY[0] || {}).fund_id || null;
   }
@@ -872,5 +877,44 @@ export function getDownloadFileName(_state) {
 }
 export function getActivePosterEl(_tpl) { return document.getElementById('poster-compare'); }
 
-// autoFetch 路徑：本素材無需連網，只重繪海報（並讓 index.html 啟用下載鈕）
-export async function fetchData(_SCRIPT) { update(); }
+// autoFetch 路徑：從 GAS web-app 取「客戶維護的上架基金清單 + 真值」。
+//   getFunds  → 重建 REGISTRY（下拉選單＝客戶維護的上架基金）
+//   getCompare→ 抓「當下比較的 2~3 檔」真值（vol/報酬率）蓋掉 MOCK；只抓當下選的，不全抓
+// 失敗則靜默維持現有（mock）狀態。
+export async function fetchData(SCRIPT) {
+  if (!SCRIPT) { update(); return; }
+  try {
+    const funds = await fetch(`${SCRIPT}?action=getFunds`).then(r => r.json());
+    if (Array.isArray(funds) && funds.length) {
+      REGISTRY = funds.map(f => ({
+        fund_id: f.code, moneydj_code: f.code,
+        display_name_zh: f.name, short_name_zh: f.house, share_class_zh: f.shareClass,
+        fund_house: f.house, is_barings: f.type === '自品', category: '全球債券',
+      }));
+      // 舊選擇若不在新清單，重設
+      const has = id => REGISTRY.some(f => f.fund_id === id);
+      if (!has(S.lead)) S.lead = (REGISTRY.find(f => f.is_barings) || REGISTRY[0] || {}).fund_id || null;
+      const pool = REGISTRY.filter(f => f.fund_id !== S.lead);
+      if (!has(S.comp1) || S.comp1 === S.lead) S.comp1 = (pool.find(f => !f.is_barings) || pool[0] || {}).fund_id || null;
+      if (!has(S.comp2) || S.comp2 === S.comp1 || S.comp2 === S.lead) S.comp2 = (pool.find(f => f.fund_id !== S.comp1) || {}).fund_id || null;
+    }
+    // 只抓當下比較的基金真值（快）
+    const codes = activeFunds().filter(Boolean).join(',');
+    if (codes) {
+      const comp = await fetch(`${SCRIPT}?action=getCompare&codes=${encodeURIComponent(codes)}`).then(r => r.json());
+      Object.entries(comp || {}).forEach(([code, d]) => {
+        if (!d || d.error) return;
+        const r = {};
+        if (d.vol != null) r.vol = d.vol + '%';
+        if (d.ytd != null) r.custom = d.ytd + '%';
+        if (d.y1 != null) r.y1 = d.y1 + '%';
+        if (d.y2 != null) r.y2 = d.y2 + '%';
+        if (d.y3 != null) r.y3 = d.y3 + '%';
+        REAL[code] = r;
+      });
+    }
+  } catch (e) {
+    console.warn('[compare] fetchData 失敗，維持 mock：', e);
+  }
+  if (_fields) renderFields(_fields); else update();
+}
