@@ -50,6 +50,15 @@ const RET_DIMS = [
 ];
 const ALL_DIMS = [...CORE_DIMS, ...RET_DIMS];
 
+// item3：績效走勢圖的時間區間（月數）
+const TREND_PERIODS = [
+  { key: 'm3', label: '近三月', months: 3 },
+  { key: 'm6', label: '近六月', months: 6 },
+  { key: 'y1', label: '近一年', months: 12 },
+  { key: 'y3', label: '近三年', months: 36 },
+  { key: 'y5', label: '近五年', months: 60 },
+];
+
 // 「領先勾選」規則：high=越大越好、low=越小越好、low_ord=利率敏感度(低<中<高)
 // 沒列出的維度(target/credit/features)不標領先。
 const WIN_RULE = {
@@ -102,6 +111,7 @@ const S = {
   features: {},           // item4：自行輸入的投資特色（key=fund_id → string[]）；未編輯則回退中性通用預設
   credit: {},             // 平均信評：MoneyDJ HTML 抓不到（月報才有）→ 人工填；未來可由 LLM 抽取回填此處
   duration: {},           // 存續期間：同上（部分基金月報也沒有）→ 人工填；未編輯回退 MOCK
+  perfPeriod: 'y1',       // item3：績效圖顯示的區間（RET_DIMS 的 key：custom/y1/y2/y3）
   showLogo: true,         // item1：LOGO 顯示開關（保留開關、預設開啟）
   showWin: true,          // item2：勝出勾選（✔）顯示開關（保留開關、預設開啟）
   crown: false,           // 「綜合表現領先」徽章（合規預設關）
@@ -199,7 +209,7 @@ export const CSS = `
 #poster-compare .cmp-perf-table .cmp-dim{font-size:19px;}
 
 /* conclusion panel */
-#poster-compare .cmp-conclusion{flex:1;position:relative;overflow:hidden;border-radius:14px;background:linear-gradient(135deg,#1a3a64 0%,#0e2342 100%);display:flex;flex-direction:column;justify-content:center;padding:26px 32px;box-sizing:border-box;}
+#poster-compare .cmp-conclusion{flex:none;position:relative;overflow:hidden;border-radius:14px;background:linear-gradient(135deg,#1a3a64 0%,#0e2342 100%);display:flex;flex-direction:column;justify-content:center;padding:26px 32px;box-sizing:border-box;}
 #poster-compare .cmp-conclusion .cmp-cbar{position:absolute;top:0;left:0;bottom:0;width:5px;background:linear-gradient(#e8c275,#f1d99a);}
 #poster-compare .cmp-conclusion .cmp-clabel{font:700 13px 'Noto Sans TC',sans-serif;letter-spacing:.2em;color:#e8c275;}
 #poster-compare .cmp-conclusion .cmp-ctext{margin-top:9px;font:700 24px/1.46 'Noto Serif TC',serif;color:#fff;}
@@ -212,6 +222,13 @@ export const CSS = `
 #poster-compare .cmp-footer{margin-top:22px;padding-top:14px;border-top:1px solid #e7e4db;display:flex;justify-content:space-between;gap:24px;}
 #poster-compare .cmp-source{font:400 14.5px/1.6 'Noto Sans TC',sans-serif;color:#8a8f9c;}
 #poster-compare .cmp-disclaimer{font:400 14.5px/1.6 'Noto Sans TC',sans-serif;color:#9aa0ab;text-align:right;flex:none;}
+/* item3：績效圖（期間報酬長條比較，div 長條以相容 html2canvas） */
+#poster-compare .cmp-perf-wrap{flex:1;display:flex;flex-direction:column;min-height:0;}
+#poster-compare .cmp-perf-chart{flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 2px;}
+#poster-compare .cmp-pc-title{font:600 19px 'Noto Serif TC',serif;color:#1a2a52;margin:0 0 14px;}
+#poster-compare .cmp-pc-title b{color:#b08a2e;}
+#poster-compare .cmp-perf-chart canvas{display:block;width:100%;}
+#poster-compare .cmp-pc-note{font:400 13px 'Noto Sans TC',sans-serif;color:#9aa0ab;margin-top:14px;}
 
 /* 2 欄模式 */
 #poster-compare.cmp-2col{--cmp-label:170px;--cmp-band-left:170px;--cmp-band-width:calc((100% - 170px)/2);}
@@ -310,45 +327,9 @@ export const HTML = `
     </div>
 
     <div class="cmp-col cmp-right">
-      <div>
+      <div class="cmp-perf-wrap">
         <div class="cmp-sechead"><span class="cmp-sectitle">報酬率表現比較</span><span class="cmp-secsub">年化／含息</span><span class="cmp-secline"></span></div>
-        <div class="cmp-table cmp-perf-table">
-          <div class="cmp-row cmp-head cmp-perfhead">
-            <div class="cmp-headlabel">報酬率表現</div>
-            <div class="cmp-fund" data-col="lead"><span class="cmp-fname">霸菱</span></div>
-            <div class="cmp-fund" data-col="comp1"><span class="cmp-fname">PIMCO</span></div>
-            <div class="cmp-fund" data-col="comp2"><span class="cmp-fname">高盛</span></div>
-          </div>
-          <div class="cmp-perfbody">
-            <div class="cmp-band cmp-band-perf"></div>
-            <div class="cmp-body">
-              <div class="cmp-row" data-dim="custom">
-                <div class="cmp-rowlabel"><span class="cmp-dim">今年以來</span><span class="cmp-unit">YTD / 自訂區間</span></div>
-                <div class="cmp-cell" data-col="lead" data-dim="custom"><span class="cmp-val">—</span></div>
-                <div class="cmp-cell" data-col="comp1" data-dim="custom"><span class="cmp-val">—</span></div>
-                <div class="cmp-cell" data-col="comp2" data-dim="custom"><span class="cmp-val">—</span></div>
-              </div>
-              <div class="cmp-row" data-dim="y1">
-                <div class="cmp-rowlabel"><span class="cmp-dim">近一年</span></div>
-                <div class="cmp-cell" data-col="lead" data-dim="y1"><span class="cmp-val">—</span></div>
-                <div class="cmp-cell" data-col="comp1" data-dim="y1"><span class="cmp-val">—</span></div>
-                <div class="cmp-cell" data-col="comp2" data-dim="y1"><span class="cmp-val">—</span></div>
-              </div>
-              <div class="cmp-row" data-dim="y2">
-                <div class="cmp-rowlabel"><span class="cmp-dim">近兩年</span><span class="cmp-unit">年化</span></div>
-                <div class="cmp-cell" data-col="lead" data-dim="y2"><span class="cmp-val">—</span></div>
-                <div class="cmp-cell" data-col="comp1" data-dim="y2"><span class="cmp-val">—</span></div>
-                <div class="cmp-cell" data-col="comp2" data-dim="y2"><span class="cmp-val">—</span></div>
-              </div>
-              <div class="cmp-row" data-dim="y3">
-                <div class="cmp-rowlabel"><span class="cmp-dim">近三年</span><span class="cmp-unit">年化</span></div>
-                <div class="cmp-cell" data-col="lead" data-dim="y3"><span class="cmp-val">—</span></div>
-                <div class="cmp-cell" data-col="comp1" data-dim="y3"><span class="cmp-val">—</span></div>
-                <div class="cmp-cell" data-col="comp2" data-dim="y3"><span class="cmp-val">—</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="cmp-perf-chart" id="cmpPerfChart"></div>
       </div>
 
       <div class="cmp-conclusion">
@@ -395,6 +376,29 @@ function num(v) {
   if (m === '' || m === '-' || m === '.') return null;
   const n = parseFloat(m);
   return Number.isFinite(n) ? n : null;
+}
+// item3：mock 淨值時間序列（指數化起點 100，月點 5 年）。deterministic：同一檔每次一樣。
+// 漂移取自該檔年化報酬、波動取自年化標準差，讓走勢「像」該檔特性。之後接 MoneyDJ 真實歷史序列取代。
+const _seriesCache = {};
+function _hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function _mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function mockSeries(id) {
+  if (_seriesCache[id]) return _seriesCache[id];
+  const d = dataOf(id);
+  const volA = num(d.vol) ?? 4;                    // 年化波動 %
+  const retA = num(d.y3) ?? num(d.y1) ?? 4;        // 年化報酬 %（當漂移）
+  const muM = retA / 12 / 100;                      // 月漂移
+  const sdM = (volA / Math.sqrt(12)) / 100;         // 月波動
+  const rnd = _mulberry32(_hash(id || 'x'));
+  let level = 100; const pts = [level];
+  for (let i = 1; i < 61; i++) {                    // 60 個月 + 起點
+    const u1 = Math.max(1e-9, rnd()), u2 = rnd();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2); // Box-Muller 常態
+    level *= (1 + muM + sdM * z);
+    pts.push(level);
+  }
+  _seriesCache[id] = pts;
+  return pts;
 }
 const ORD = { '低': 1, '中': 2, '中高': 2.5, '高': 3 };
 function ordVal(v) {
@@ -465,9 +469,9 @@ export function renderFields(container) {
 
     <div class="cmp-dim-group">核心數據比較</div>
     <div id="cmpCoreChecks"></div>
-    <div class="cmp-dim-group">報酬率表現比較</div>
-    <div id="cmpRetChecks"></div>
-    <div class="cmp-warn" style="margin-top:6px">＊「自訂區間」起算點需法遵確認，預設採今年以來（YTD）</div>
+    <div class="cmp-dim-group">績效圖・比較區間（單選）</div>
+    <div id="cmpPeriodSel"></div>
+    <div class="cmp-warn" style="margin-top:6px">＊「今年以來（YTD）」起算點需法遵確認</div>
 
     <div class="cmp-field" style="margin-top:14px">
       <label>價值主張／標題（自行輸入）</label>
@@ -507,7 +511,14 @@ export function renderFields(container) {
     return lab;
   };
   CORE_DIMS.forEach(d => container.querySelector('#cmpCoreChecks').appendChild(mkCheck(d)));
-  RET_DIMS.forEach(d => container.querySelector('#cmpRetChecks').appendChild(mkCheck(d)));
+  const psel = container.querySelector('#cmpPeriodSel');
+  TREND_PERIODS.forEach(d => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.period = d.key; b.textContent = d.label;
+    b.style.cssText = 'padding:7px 13px;margin:0 8px 8px 0;border-radius:8px;border:1px solid #dde0e6;font:600 13px sans-serif;cursor:pointer;'
+      + (S.perfPeriod === d.key ? 'background:#1a2a52;color:#fff;border-color:#1a2a52' : 'background:#fff;color:#5b6573');
+    psel.appendChild(b);
+  });
 
   container.querySelector('#cmpVPText').value = S.valueProp;
   container.querySelector('#cmpAllCat').checked = S.showAllCat;
@@ -574,6 +585,17 @@ function _wireEvents(c) {
   c.querySelector('#cmpLogo').addEventListener('change', e => { S.showLogo = e.target.checked; upd(); });
   c.querySelector('#cmpWin').addEventListener('change', e => { S.showWin = e.target.checked; upd(); });
   c.querySelector('#cmpCrown').addEventListener('change', e => { S.crown = e.target.checked; upd(); });
+  c.querySelector('#cmpPeriodSel').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-period]'); if (!btn) return;
+    S.perfPeriod = btn.dataset.period;
+    c.querySelectorAll('#cmpPeriodSel button').forEach(b => {
+      const on = b.dataset.period === S.perfPeriod;
+      b.style.background = on ? '#1a2a52' : '#fff';
+      b.style.color = on ? '#fff' : '#5b6573';
+      b.style.borderColor = on ? '#1a2a52' : '#dde0e6';
+    });
+    upd();
+  });
 }
 
 // 依目前參與比較的基金，動態產生每檔的人工填寫欄位：投資特色 + 平均信評 + 存續期間。
@@ -620,6 +642,94 @@ function _renderManualFields() {
       const id = idOf(e.target.dataset.durCol); if (!id) return;
       S.duration[id] = e.target.value.trim(); upd();
     }));
+}
+
+// item3：績效走勢圖 — 依選定區間畫各基金「累積報酬率走勢」多線比較（canvas，相容 html2canvas 匯出）。
+// 現用 mock 時間序列（示意），之後把 mockSeries() 換成 MoneyDJ 真實歷史序列即可；主打霸菱深藍粗線、競品灰細線。
+function _renderPerfChart() {
+  const host = document.getElementById('cmpPerfChart');
+  if (!host) return;
+  const per = TREND_PERIODS.find(p => p.key === S.perfPeriod) || TREND_PERIODS[2];
+  const series = activeFunds().map(id => {
+    const full = mockSeries(id);
+    const win = full.slice(Math.max(0, full.length - 1 - per.months));
+    const base = win[0] || 1;
+    const f = fundById(id);
+    return {
+      id, isLead: id === S.lead,
+      name: (f ? (f.fund_house || f.short_name_zh || f.display_name_zh) : '—').replace(/[（(].*$/, '').trim() || '—',
+      cum: win.map(v => (v / base - 1) * 100),
+    };
+  });
+
+  host.innerHTML = `<div class="cmp-pc-title"><b>${esc(per.label)}</b> 報酬率走勢比較</div>`;
+  const cssW = host.clientWidth || 680, cssH = 340, dpr = 2;
+  const canvas = document.createElement('canvas');
+  canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  host.appendChild(canvas);
+  host.insertAdjacentHTML('beforeend',
+    `<div class="cmp-pc-note">＊區間累積報酬率、以起點為 0；深色為主打基金。過去績效不代表未來表現。（示意資料，待接真實歷史淨值）</div>`);
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const L = 46, R = 100, T = 14, B = 28;
+  const pw = cssW - L - R, ph = cssH - T - B;
+  const npts = Math.max(2, series[0]?.cum.length || 2);
+  const allV = series.flatMap(s => s.cum).concat([0]);
+  let ymin = Math.min(...allV), ymax = Math.max(...allV);
+  const pad = (ymax - ymin) * 0.14 || 1; ymin -= pad; ymax += pad;
+  const X = i => L + (npts <= 1 ? 0 : i / (npts - 1)) * pw;
+  const Y = v => T + (1 - (v - ymin) / (ymax - ymin)) * ph;
+
+  // 水平格線 + y 軸 %
+  ctx.font = '12px "Noto Sans TC",sans-serif'; ctx.textBaseline = 'middle';
+  for (let t = 0; t <= 4; t++) {
+    const val = ymin + (ymax - ymin) * t / 4, yy = Y(val);
+    ctx.strokeStyle = '#eef0f3'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(L, yy); ctx.lineTo(L + pw, yy); ctx.stroke();
+    ctx.fillStyle = '#9aa0ab'; ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(0) + '%', L - 8, yy);
+  }
+  // 零線（略強調）
+  const y0 = Y(0); ctx.strokeStyle = '#c2c8d2'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(L, y0); ctx.lineTo(L + pw, y0); ctx.stroke();
+  // x 軸起訖月份
+  const now = new Date();
+  const endLbl = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const sd = new Date(now.getFullYear(), now.getMonth() - per.months, 1);
+  const startLbl = `${sd.getFullYear()}/${String(sd.getMonth() + 1).padStart(2, '0')}`;
+  ctx.fillStyle = '#9aa0ab'; ctx.textBaseline = 'top';
+  ctx.textAlign = 'left'; ctx.fillText(startLbl, L, T + ph + 8);
+  ctx.textAlign = 'right'; ctx.fillText(endLbl, L + pw, T + ph + 8);
+
+  // 線（競品先畫、霸菱壓上層）+ 收集端點標籤
+  const ordered = [...series].sort((a, b) => (a.isLead ? 1 : 0) - (b.isLead ? 1 : 0));
+  const labels = [];
+  ordered.forEach(s => {
+    ctx.strokeStyle = s.isLead ? '#1a2a52' : '#aab2c0';
+    ctx.lineWidth = s.isLead ? 3.4 : 2;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath();
+    s.cum.forEach((v, i) => { const px = X(i), py = Y(v); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+    ctx.stroke();
+    const li = s.cum.length - 1, ex = X(li), ey = Y(s.cum[li]);
+    ctx.fillStyle = s.isLead ? '#1a2a52' : '#aab2c0';
+    ctx.beginPath(); ctx.arc(ex, ey, s.isLead ? 4.5 : 3.5, 0, Math.PI * 2); ctx.fill();
+    const val = s.cum[li];
+    labels.push({ ex, ey, lead: s.isLead, text: `${s.name} ${val >= 0 ? '+' : ''}${val.toFixed(1)}%` });
+  });
+  // 端點標籤垂直去重疊
+  labels.sort((a, b) => a.ey - b.ey);
+  for (let i = 1; i < labels.length; i++) {
+    if (labels[i].ey - labels[i - 1].ey < 18) labels[i].ey = labels[i - 1].ey + 18;
+  }
+  labels.forEach(l => {
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.font = (l.lead ? '700 ' : '600 ') + '13px "Noto Sans TC",sans-serif';
+    ctx.fillStyle = l.lead ? '#1a2a52' : '#5b6573';
+    ctx.fillText(l.text, l.ex + 8, l.ey);
+  });
 }
 
 // ============================================================
@@ -720,6 +830,9 @@ export function update() {
     const f = featuresOf(S.lead);
     cbull.innerHTML = f.length ? f.map(x => `<li>${esc(x)}</li>`).join('') : '';
   }
+
+  // item3：績效圖
+  _renderPerfChart();
 
   // LINE 文字
   const mb = document.getElementById('msgBox');
