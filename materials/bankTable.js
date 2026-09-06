@@ -54,6 +54,17 @@ FUNDS.forEach(f => [...f.front, ...f.back].forEach(it => checkedTS.add(it.code))
 const checkedFB = new Set();
 FUBON.forEach(f => [...f.front, ...f.back].forEach(it => checkedFB.add(it.code)));
 
+// item9/10：兩通路都用台新版面。台新、富邦賣同兩檔霸菱基金 → 核心數據沿用 FUNDS（同序對應），
+// 名稱/圖示/下單代碼用各通路自己的。富邦卡片資料 = FUNDS 核心 + FUBON 名稱與代碼。
+const FUBON_CORE = FUBON.map((f, i) => ({
+  id: f.id, name: f.name, icon: FUNDS[i].icon, star: FUNDS[i].star,
+  ytm: FUNDS[i].ytm, duration: FUNDS[i].duration, credit: FUNDS[i].credit,
+  allocPct: FUNDS[i].allocPct, allocType: FUNDS[i].allocType, allocSub: FUNDS[i].allocSub,
+  perf: FUNDS[i].perf, front: f.front, back: f.back,
+}));
+function channelFunds() { return curChannel === '台新' ? [fundById(sel1), fundById(sel2)] : FUBON_CORE; }
+function channelChecked() { return curChannel === '台新' ? checkedTS : checkedFB; }
+
 export function getPoster() { return curChannel === '台新' ? { w:1080 } : { w:1080 }; }
 export const FONTS = [ '700 30px "Noto Serif TC"', '700 42px "Inter"', '600 14px "Noto Sans TC"' ];
 
@@ -65,18 +76,21 @@ export const CSS = `
 /* 修正：富邦的全域 .nm（深色）會洩漏到台新卡片字名，強制白字 */
 #poster-taishin .ch .nm{ color:#fff !important; }
 .fc{
-  --navy:#15294C; --navy-line:rgba(255,255,255,.14);
+  /* item10：台新主色系。紅色只作重點 accent（--brand），大面積結構用深色（--navy），避免紅色過多。
+     數字類用 --ink 中性深色，避免財務數字變紅被誤讀為負值。 */
+  --navy:#1E2B44; --brand:#C8102E; --navy-line:rgba(255,255,255,.14);
   --gold:#A9822B; --gold-2:#C9A227; --gold-soft:#F8F1DA; --gold-border:#E4CF8E;
-  --ink:#16294B; --body:#3A4456; --muted:#7B8494; --line:#E7E9EE;
+  --ink:#1E2733; --body:#3A4456; --muted:#7B8494; --line:#E7E9EE;
   --surface:#F5F7FA; --bg:#FFFFFF;
   font-family:'Inter','Noto Sans TC',sans-serif;
   color:var(--body); -webkit-font-smoothing:antialiased;
   container-type:inline-size; background:var(--bg); width:100%;
 }
 .fc *{box-sizing:border-box;}
+.fc.ch-fubon{ --brand:#0A4F97; } /* item10：富邦通路 → 富邦藍 accent（結構仍深色）*/
 
 /* header */
-.fc .fc-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:0 2px 16px;border-bottom:2px solid var(--navy);}
+.fc .fc-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:0 2px 16px;border-bottom:2px solid var(--brand);}
 .fc .fc-brand{display:flex;align-items:center;gap:16px;}
 .fc .fc-logo{height:34px;width:auto;display:block;}
 .fc .fc-brand .vr{width:1px;height:30px;background:var(--line);}
@@ -86,9 +100,9 @@ export const CSS = `
 .fc .fc-status b{font-weight:700;font-variant-numeric:tabular-nums;}
 
 .fc .fc-titlewrap{padding:22px 2px 22px;}
-.fc .fc-tag{display:inline-block;background:var(--navy);color:#fff;font-size:13px;font-weight:600;padding:6px 13px;border-radius:6px;letter-spacing:.06em;margin-bottom:13px;}
+.fc .fc-tag{display:inline-block;background:var(--brand);color:#fff;font-size:13px;font-weight:600;padding:6px 13px;border-radius:6px;letter-spacing:.06em;margin-bottom:13px;}
 .fc .fc-tag b{color:var(--gold-2);font-weight:700;}
-.fc .fc-h1{font-size:30px;line-height:1.22;font-weight:700;color:var(--navy);letter-spacing:-.01em;margin:0;text-wrap:balance;}
+.fc .fc-h1{font-size:30px;line-height:1.22;font-weight:700;color:var(--brand);letter-spacing:-.01em;margin:0;text-wrap:balance;}
 .fc .fc-sub{margin-top:9px;font-size:14px;color:var(--muted);line-height:1.5;}
 
 /* atoms */
@@ -102,9 +116,9 @@ export const CSS = `
 .fc .sc-item:last-child{border-bottom:none;}
 .fc .sc-name{flex:1;font-size:14px;color:var(--ink);font-weight:500;}
 .fc .sc-code{display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:2px 9px;border:1.5px solid var(--gold-border);border-radius:999px;background:var(--gold-soft);color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.04em;white-space:nowrap;font-variant-numeric:tabular-nums;}
-.fc .sc-rate{font-size:15px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.fc .sc-rate{font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .fc .sc-glabel{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.04em;padding:4px 11px;border-radius:6px;margin:4px 0 2px;}
-.fc .sc-glabel.front,.fc .sc-glabel.back{color:#fff;background:var(--navy);}
+.fc .sc-glabel.front,.fc .sc-glabel.back{color:#fff;background:var(--brand);}
 
 .fc .fc-foot{margin-top:24px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted);line-height:1.65;}
 .fc .fc-foot .src{text-align:right;}
@@ -122,7 +136,8 @@ export const CSS = `
 .fc .card{border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(16,32,64,.07);display:flex;flex-direction:column;}
 .fc .card.spot{border-color:var(--gold-border);box-shadow:0 3px 14px rgba(169,130,43,.18);}
 .fc .ch{background:var(--navy);color:#fff;padding:18px 20px;position:relative;}
-.fc .card.spot .ch{background:linear-gradient(115deg,#15294C,#284472);}
+.fc .card.spot .ch{background:linear-gradient(115deg,#1E2B44,#33456B);}
+.fc .card.spot{border-color:var(--brand);}
 .fc .ch .ft{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--gold-2);}
 .fc .ch .nm{font-size:18px;font-weight:700;margin-top:4px;line-height:1.3;}
 .fc .ch .stars{margin-top:11px;display:flex;align-items:center;gap:9px;}
@@ -130,7 +145,7 @@ export const CSS = `
 .fc .ch-icon{margin:11px 0 5px;opacity:.75;}
 .fc .cb{padding:20px;display:flex;flex-direction:column;gap:18px;}
 .fc .hero-m{display:flex;align-items:flex-end;gap:11px;}
-.fc .hero-m .big{font-size:42px;font-weight:700;color:var(--navy);line-height:.9;font-variant-numeric:tabular-nums;}
+.fc .hero-m .big{font-size:42px;font-weight:700;color:var(--ink);line-height:.9;font-variant-numeric:tabular-nums;}
 .fc .hero-m .lab{padding-bottom:6px;font-size:13px;color:var(--muted);}
 .fc .hero-m .lab b{display:block;color:var(--gold);font-weight:700;font-size:11px;letter-spacing:.08em;margin-bottom:1px;}
 .fc .statrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -140,14 +155,14 @@ export const CSS = `
 .fc .alloc-block{background:var(--gold-soft);border:1px solid var(--gold-border);border-radius:8px;padding:13px 15px;}
 .fc .alloc-block .k{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.06em;}
 .fc .alloc-main{display:flex;align-items:baseline;gap:9px;margin:5px 0 2px;}
-.fc .alloc-pct{font-size:22px;font-weight:700;color:var(--navy);line-height:1;font-variant-numeric:tabular-nums;}
+.fc .alloc-pct{font-size:22px;font-weight:700;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums;}
 .fc .alloc-type{font-size:13px;color:var(--body);font-weight:500;}
 .fc .alloc-block .s{font-size:12px;color:var(--muted);margin-top:4px;}
 .fc .perf2{border-top:1px solid var(--line);padding-top:14px;}
 .fc .perf2 .lab{font-size:11px;color:var(--muted);letter-spacing:.04em;margin-bottom:8px;}
 .fc .perf2 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .fc .perf2 .k{font-size:11px;color:var(--muted);}
-.fc .perf2 .v{font-size:18px;font-weight:700;color:var(--navy);margin-top:2px;font-variant-numeric:tabular-nums;}
+.fc .perf2 .v{font-size:18px;font-weight:700;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums;}
 
 @container (max-width:700px){
   .fc .cards{grid-template-columns:1fr;}
@@ -156,7 +171,8 @@ export const CSS = `
 
 #poster-fubon{ width:1080px; background:#fff; padding:46px 40px; box-sizing:border-box; }
 .fo{
-  --navy:#15294C; --navy-2:#21386B; --navy-line:rgba(255,255,255,.14);
+  /* item10：富邦主色系（富邦藍）。藍色數字在財務語境中性、不誤讀，故數字維持 --navy 藍即可。 */
+  --navy:#0A4F97; --navy-2:#083A70; --navy-line:rgba(255,255,255,.14);
   --teal:#16463F; --teal-2:#1E5C54;
   --gold:#A9822B; --gold-2:#C9A227; --gold-soft:#F8F1DA; --gold-border:#E4CF8E;
   --ink:#16294B; --body:#3A4456; --muted:#7B8494; --line:#E7E9EE;
@@ -302,18 +318,21 @@ function _card(f){
     </div></div>`;
 }
 function _scItem(it){ const r = it.rate?`<span class="sc-rate">${it.rate}</span>`:''; return `<div class="sc-item"><span class="sc-code">${it.code}</span><span class="sc-name">${it.name}</span>${r}</div>`; }
-function _scCol(f){
-  const fr = f.front.filter(it=>checkedTS.has(it.code)), bk = f.back.filter(it=>checkedTS.has(it.code));
+function _scCol(f, checked){
+  const fr = f.front.filter(it=>checked.has(it.code)), bk = f.back.filter(it=>checked.has(it.code));
   let b=''; if(fr.length) b+=`<span class="sc-glabel front">前收型</span>`+fr.map(_scItem).join('');
   if(bk.length) b+=`<span class="sc-glabel back">後收型</span>`+bk.map(_scItem).join('');
   if(!b) b=`<div style="padding:12px 0;color:#9298a4;font-size:13px">（未勾選任何級別）</div>`;
   return `<div class="sc-col"><div class="sc-col-head"><span class="sch-icon">${ICON[f.icon]}</span><span>${f.name}</span></div><div class="sc-body">${b}</div></div>`;
 }
-function _updateTS(){
-  const f1=fundById(sel1), f2=fundById(sel2);
+// item9/10：兩通路都渲染台新版面（#poster-taishin）。台新可選兩檔；富邦固定兩檔+富邦代碼。主題色由 ch-fubon class 切換。
+function _updatePoster(){
+  const funds = channelFunds(), checked = channelChecked();
   const c=document.getElementById('tsCards'), g=document.getElementById('tsScGrid');
-  if(c) c.innerHTML=_card(f1)+_card(f2);
-  if(g) g.innerHTML=_scCol(f1)+_scCol(f2);
+  if(c) c.innerHTML = funds.map(_card).join('');
+  if(g) g.innerHTML = funds.map(f=>_scCol(f, checked)).join('');
+  const poster=document.getElementById('poster-taishin');
+  if(poster) poster.classList.toggle('ch-fubon', curChannel==='富邦');
 }
 
 // ============================================================
@@ -338,7 +357,7 @@ function _updateFB(){
   if(b) b.innerHTML = _foFund(FUBON[1]);
 }
 
-export function update(){ curChannel==='台新' ? _updateTS() : _updateFB(); }
+export function update(){ _updatePoster(); }
 
 // ============================================================
 // ② 通路選擇
@@ -389,7 +408,7 @@ export function renderFields(container){
     _wireChecks(container, checkedTS);
   } else {
     container.innerHTML = `
-      <div style="font-size:12px;color:var(--muted-text);margin-bottom:8px">勾選要呈現在「全級別總覽」的項目</div>
+      <div style="font-size:12px;color:var(--muted-text);margin-bottom:8px">勾選要呈現在「配息級別」的項目</div>
       ${FUBON.map(f=>`<div style="font-size:13px;font-weight:700;color:var(--ink);margin-top:14px">${f.name}</div>${_checkGroup('後收級別 BM 類', f.back, checkedFB)}${_checkGroup('前收級別 G 類', f.front, checkedFB)}`).join('')}`;
     document.getElementById('secFields').textContent='配息級別選擇';
     _wireChecks(container, checkedFB);
@@ -418,10 +437,10 @@ export function renderMsg(container){
 
 export function showPoster(){
   const ts=document.getElementById('poster-taishin'), fb=document.getElementById('poster-fubon');
-  if(ts) ts.style.display = curChannel==='台新' ? '' : 'none';
-  if(fb) fb.style.display = curChannel==='富邦' ? '' : 'none';
+  if(ts) ts.style.display=''; // item9/10：兩通路都用台新版面
+  if(fb) fb.style.display='none'; // 富邦全級別總覽版面暫停用（程式保留）
   update();
 }
-export function getActivePosterEl(){ return document.getElementById(curChannel==='台新' ? 'poster-taishin' : 'poster-fubon'); }
+export function getActivePosterEl(){ return document.getElementById('poster-taishin'); }
 export function getDownloadFileName(){ return `霸菱${curChannel}基金資訊表.jpg`; }
 export function onDownloadClone(){ /* 無毛玻璃/漸層 */ }
