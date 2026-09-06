@@ -100,6 +100,8 @@ const S = {
   dims: Object.fromEntries(ALL_DIMS.map(d => [d.key, true])),
   valueProp: DEFAULT_TITLE,
   features: {},           // item4：自行輸入的投資特色（key=fund_id → string[]）；未編輯則回退中性通用預設
+  credit: {},             // 平均信評：MoneyDJ HTML 抓不到（月報才有）→ 人工填；未來可由 LLM 抽取回填此處
+  duration: {},           // 存續期間：同上（部分基金月報也沒有）→ 人工填；未編輯回退 MOCK
   showLogo: true,         // item1：LOGO 顯示開關（保留開關、預設開啟）
   showWin: true,          // item2：勝出勾選（✔）顯示開關（保留開關、預設開啟）
   crown: false,           // 「綜合表現領先」徽章（合規預設關）
@@ -384,6 +386,9 @@ function competitorPool() {
 function dataOf(id) { return MOCK[id] || {}; }
 // item4：投資特色以手動輸入為準，未編輯則回退中性通用預設（每檔/每欄相同，放哪都不怪）
 function featuresOf(id) { return S.features[id] ?? DEFAULT_FEATURES; }
+// 平均信評／存續期間：MoneyDJ HTML 抓不到，人工填為準；未編輯回退 MOCK（demo 保持完整）
+function creditOf(id)   { return S.credit[id]   ?? dataOf(id).credit   ?? '—'; }
+function durationOf(id) { return S.duration[id] ?? dataOf(id).duration ?? '—'; }
 function num(v) {
   if (v == null) return null;
   const m = String(v).replace(/[^\d.\-]/g, '');
@@ -419,7 +424,7 @@ export function renderStep2(grid) {
             S.comp2 = competitorPool().find(f => f.fund_id !== S.comp1)?.fund_id || null;
           }
           renderStep2(grid);
-          _applyModeUI(); _refreshSelects(); _renderFeatureEditors();
+          _applyModeUI(); _refreshSelects(); _renderManualFields();
           if (window.updatePoster) window.updatePoster(); else update();
         },
       });
@@ -470,7 +475,7 @@ export function renderFields(container) {
         placeholder="輸入標題…">
     </div>
 
-    <div class="cmp-dim-group">投資特色（自行輸入）</div>
+    <div class="cmp-dim-group">投資特色・平均信評・存續期間（自行輸入）</div>
     <div id="cmpFeatEdit"></div>
 
     <div class="cmp-toggle">
@@ -510,7 +515,7 @@ export function renderFields(container) {
   container.querySelector('#cmpWin').checked = S.showWin;
   container.querySelector('#cmpCrown').checked = S.crown;
 
-  _refreshSelects(); _applyModeUI(); _wireEvents(container); _renderFeatureEditors();
+  _refreshSelects(); _applyModeUI(); _wireEvents(container); _renderManualFields();
   update();
 }
 
@@ -548,14 +553,14 @@ function _wireEvents(c) {
     if (!pool.find(f => f.fund_id === S.comp1)) S.comp1 = pool[0]?.fund_id || null;
     if (!pool.find(f => f.fund_id === S.comp2) || S.comp2 === S.comp1)
       S.comp2 = pool.find(f => f.fund_id !== S.comp1)?.fund_id || null;
-    _refreshSelects(); _renderFeatureEditors(); upd();
+    _refreshSelects(); _renderManualFields(); upd();
   });
   c.querySelector('#cmpComp1').addEventListener('change', e => {
     S.comp1 = e.target.value;
     if (S.comp2 === S.comp1) S.comp2 = competitorPool().find(f => f.fund_id !== S.comp1)?.fund_id || null;
-    _refreshSelects(); _renderFeatureEditors(); upd();
+    _refreshSelects(); _renderManualFields(); upd();
   });
-  c.querySelector('#cmpComp2').addEventListener('change', e => { S.comp2 = e.target.value; _refreshSelects(); _renderFeatureEditors(); upd(); });
+  c.querySelector('#cmpComp2').addEventListener('change', e => { S.comp2 = e.target.value; _refreshSelects(); _renderManualFields(); upd(); });
   c.querySelector('#cmpAllCat').addEventListener('change', e => {
     S.showAllCat = e.target.checked;
     c.querySelector('#cmpCatWarn').style.display = e.target.checked ? '' : 'none';
@@ -571,32 +576,50 @@ function _wireEvents(c) {
   c.querySelector('#cmpCrown').addEventListener('change', e => { S.crown = e.target.checked; upd(); });
 }
 
-// item4：依目前參與比較的基金，動態產生「投資特色」可編輯欄位（一檔一個 textarea）
-function _renderFeatureEditors() {
+// 依目前參與比較的基金，動態產生每檔的人工填寫欄位：投資特色 + 平均信評 + 存續期間。
+// 信評／存續期間 MoneyDJ HTML 抓不到（月報才有、且部分基金也沒有）→ 先人工填，
+// 未來要自動化時，可由多模態 LLM 從月報抽取後回填 S.credit / S.duration，介面不變。
+function _renderManualFields() {
   const wrap = document.getElementById('cmpFeatEdit');
   if (!wrap) return;
   const cols = [['lead', S.lead, '★ 主打'], ['comp1', S.comp1, '競品 1']];
   if (S.mode === '1v1v1') cols.push(['comp2', S.comp2, '競品 2']);
+  const shown = v => (v == null || v === '—') ? '' : String(v);
   wrap.innerHTML = cols.map(([col, id, tag]) => {
     const f = fundById(id);
     const name = f ? f.display_name_zh : '—';
-    const val = esc(featuresOf(id).join('\n'));
+    const feat = esc(featuresOf(id).join('\n'));
     return `<div class="cmp-field" style="margin-top:10px">
       <label>${tag}投資特色 · ${esc(name)}</label>
       <textarea class="data-input" data-feat-col="${col}" rows="3"
         style="width:100%;text-align:left;resize:vertical;line-height:1.5;font-family:inherit"
-        placeholder="輸入投資特色…">${val}</textarea>
+        placeholder="輸入投資特色…">${feat}</textarea>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input class="data-input" data-credit-col="${col}" value="${esc(shown(creditOf(id)))}"
+          style="flex:1;text-align:left" placeholder="平均信評（如 BB-）">
+        <input class="data-input" data-dur-col="${col}" value="${esc(shown(durationOf(id)))}"
+          style="flex:1;text-align:left" placeholder="存續期間（如 2.8年）">
+      </div>
     </div>`;
   }).join('');
-  wrap.querySelectorAll('textarea[data-feat-col]').forEach(ta => {
+  const idOf = col => col === 'lead' ? S.lead : col === 'comp1' ? S.comp1 : S.comp2;
+  const upd = () => { window.updatePoster ? window.updatePoster() : update(); };
+  wrap.querySelectorAll('textarea[data-feat-col]').forEach(ta =>
     ta.addEventListener('input', e => {
-      const col = e.target.dataset.featCol;
-      const id = col === 'lead' ? S.lead : col === 'comp1' ? S.comp1 : S.comp2;
-      if (!id) return;
+      const id = idOf(e.target.dataset.featCol); if (!id) return;
       S.features[id] = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
-      window.updatePoster ? window.updatePoster() : update();
-    });
-  });
+      upd();
+    }));
+  wrap.querySelectorAll('input[data-credit-col]').forEach(inp =>
+    inp.addEventListener('input', e => {
+      const id = idOf(e.target.dataset.creditCol); if (!id) return;
+      S.credit[id] = e.target.value.trim(); upd();
+    }));
+  wrap.querySelectorAll('input[data-dur-col]').forEach(inp =>
+    inp.addEventListener('input', e => {
+      const id = idOf(e.target.dataset.durCol); if (!id) return;
+      S.duration[id] = e.target.value.trim(); upd();
+    }));
 }
 
 // ============================================================
@@ -650,7 +673,10 @@ export function update() {
       const cell = root.querySelector(`.cmp-cell[data-col="${col}"][data-dim="${dim.key}"]`);
       if (!cell) return;
       const d = dataOf(id);
-      const v = dim.key === 'features' ? featuresOf(id) : d[dim.key];
+      const v = dim.key === 'features' ? featuresOf(id)
+              : dim.key === 'credit'   ? creditOf(id)
+              : dim.key === 'duration' ? durationOf(id)
+              : d[dim.key];
       cell.classList.remove('cmp-neg');
       // 移除舊的領先勾選
       cell.querySelectorAll('.cmp-win').forEach(w => w.remove());
