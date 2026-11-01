@@ -428,12 +428,7 @@ export async function onChannelChange(channel){
 function _clear(el){ if(el) el.innerHTML=''; return el; }
 export async function fetchData(){ update(); }
 
-export function renderMsg(container){
-  container.innerHTML = `
-    <div class="cs-cardhead"><div class="cs-num">4</div><div class="cs-cardtitle">LINE 訊息</div></div>
-    <div id="msgBox" style="background:#f7f9fc;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap">🏦【霸菱 × ${curChannel}銀行 基金資訊】\n\n精選基金核心數據與配息級別一覽，詳見附圖 ⬇️\n＊本資料僅供參考，投資前請詳閱公開說明書</div>
-    <button onclick="copyMsg()" style="margin-top:10px;width:100%;height:38px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text);font-size:13px;font-weight:600;cursor:pointer">📋 複製文字</button>`;
-}
+// 不提供 renderMsg → 不顯示 LINE 卡（LINE 文字只有配息提醒需要）
 
 export function showPoster(){
   const ts=document.getElementById('poster-taishin'), fb=document.getElementById('poster-fubon');

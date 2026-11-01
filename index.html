@@ -218,7 +218,7 @@ body{background:var(--page-bg);font-family:'Inter','Noto Sans TC',sans-serif;col
         <div class="cs-cardhead"><div class="cs-num">3</div><div class="cs-cardtitle" id="secFields">資料確認</div><span style="font-size:11px;color:var(--muted-text);margin-left:auto">可手動修改</span></div>
         <div id="fieldsContainer"></div>
       </div>
-      <!-- ④ LINE 訊息（整張卡片由 renderMsg 注入）-->
+      <!-- ④ LINE 訊息（整張卡片由 renderMsg 注入；素材沒有 renderMsg 則隱藏）-->
       <div id="msgSection" class="cs-card"></div>
     </div>
 
@@ -394,7 +394,7 @@ async function onMaterialChange(key) {
   renderMaterialTabs();
   renderTemplateButtons();
   MOD.renderFields(document.getElementById('fieldsContainer'));
-  MOD.renderMsg(document.getElementById('msgSection'));
+  renderMsgSection();
   MOD.showPoster(APP.template);
   scheduleRenderPreview();
 
@@ -483,6 +483,13 @@ async function downloadJPG() {
 }
 
 // ============================================================
+// LINE 訊息卡：只有提供 renderMsg 的素材（目前僅配息提醒）才顯示
+function renderMsgSection() {
+  const sec = document.getElementById('msgSection');
+  if (MOD && MOD.renderMsg) { sec.style.display = ''; MOD.renderMsg(sec); }
+  else { sec.innerHTML = ''; sec.style.display = 'none'; }
+}
+
 // 複製文字 / 開啟 LINE
 // ============================================================
 async function copyMsg() {
@@ -587,7 +594,7 @@ async function bootstrap() {
   renderMaterialTabs();
   renderTemplateButtons();
   MOD.renderFields(document.getElementById('fieldsContainer'));
-  MOD.renderMsg(document.getElementById('msgSection'));
+  renderMsgSection();
   MOD.showPoster(APP.template);
   scheduleRenderPreview();   // 立即用快取資料產生預覽
   // 資料抓取在背景進行，不阻塞畫面（抓到後自動更新並重繪預覽）
