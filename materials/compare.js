@@ -30,7 +30,7 @@ let REGISTRY = await fetch('./data/funds.json')
   .then(r => r.json())
   .then(d => d.funds.map(f => ({ ...f, fund_id: f.moneydj_code })))
   .catch(() => []);
-let REAL = {};   // 真值快取（key = MoneyDJ code）：getCompare 抓到的 vol/報酬率覆蓋 MOCK
+let REAL = {};   // 真值快取（key = MoneyDJ code）：getCompare 抓到的真值覆蓋 MOCK；{} = 已抓過但無資料
 
 // ------------------------------------------------------------
 // 比較維度
@@ -38,6 +38,8 @@ let REAL = {};   // 真值快取（key = MoneyDJ code）：getCompare 抓到的 
 const CORE_DIMS = [
   { key: 'target',    label: '投資標的' },
   { key: 'vol',       label: '波動度' },
+  { key: 'sharpe',    label: 'Sharpe 值', defaultOff: true },
+  { key: 'beta',      label: 'Beta 值',   defaultOff: true },
   { key: 'rate_sens', label: '利率敏感度' },
   { key: 'credit',    label: '信用品質' },
   { key: 'yield',     label: '收益率' },
@@ -65,7 +67,7 @@ const TREND_PERIODS = [
 // 「領先勾選」規則：high=越大越好、low=越小越好、low_ord=利率敏感度(低<中<高)
 // 沒列出的維度(target/credit/features)不標領先。
 const WIN_RULE = {
-  vol: 'low', duration: 'low', rate_sens: 'low_ord',
+  vol: 'low', sharpe: 'high', duration: 'low', rate_sens: 'low_ord',
   yield: 'high', maxdd: 'high', custom: 'high', y1: 'high', y2: 'high', y3: 'high',
 };
 const WIN_SVG = '<span class="cmp-win"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>';
@@ -109,11 +111,16 @@ const S = {
   lead: null, comp1: null, comp2: null,
   mode: '1v1v1',          // '1v1' | '1v1v1'
   showAllCat: false,
-  dims: Object.fromEntries(ALL_DIMS.map(d => [d.key, true])),
+  dims: Object.fromEntries(ALL_DIMS.map(d => [d.key, !d.defaultOff])),
   valueProp: DEFAULT_TITLE,
   features: {},           // item4：自行輸入的投資特色（key=fund_id → string[]）；未編輯則回退中性通用預設
-  credit: {},             // 平均信評：MoneyDJ HTML 抓不到（月報才有）→ 人工填；未來可由 LLM 抽取回填此處
-  duration: {},           // 存續期間：同上（部分基金月報也沒有）→ 人工填；未編輯回退 MOCK
+  // 人工填寫值（key=維度 → {fund_id: 值}）。優先序：人工 > MoneyDJ 真值(REAL) > MOCK。
+  //   credit／duration：MoneyDJ HTML 抓不到（月報才有）；未來可由 LLM 從月報抽取回填此處
+  //   rate_sens：無任何真值來源，只能人工判斷（低／中／中高／高）
+  //   target：投資標的一句話描述，非 MOCK 內的基金必須人工填
+  manual: { target: {}, rate_sens: {}, credit: {}, duration: {} },
+  source: null,           // 頁尾資料來源（null = 依資料日期自動組字）
+  disclaimer: '基金過去績效不代表未來表現，投資人申購前應詳閱公開說明書。',
   perfPeriod: 'y1',       // item3：績效圖顯示的區間（RET_DIMS 的 key：custom/y1/y2/y3）
   showLogo: true,         // item1：LOGO 顯示開關（保留開關、預設開啟）
   showWin: true,          // item2：勝出勾選（✔）顯示開關（保留開關、預設開啟）
@@ -224,7 +231,7 @@ export const CSS = `
 /* footer */
 #poster-compare .cmp-footer{margin-top:22px;padding-top:14px;border-top:1px solid #e7e4db;display:flex;justify-content:space-between;gap:24px;}
 #poster-compare .cmp-source{font:400 14.5px/1.6 'Noto Sans TC',sans-serif;color:#8a8f9c;}
-#poster-compare .cmp-disclaimer{font:400 14.5px/1.6 'Noto Sans TC',sans-serif;color:#9aa0ab;text-align:right;flex:none;}
+#poster-compare .cmp-disclaimer{font:400 14.5px/1.6 'Noto Sans TC',sans-serif;color:#9aa0ab;text-align:right;flex:none;max-width:52%;white-space:pre-line;}
 /* item3：績效圖（期間報酬長條比較，div 長條以相容 html2canvas） */
 #poster-compare .cmp-perf-wrap{flex:1;display:flex;flex-direction:column;min-height:0;}
 #poster-compare .cmp-perf-chart{flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 2px;}
@@ -289,6 +296,18 @@ export const HTML = `
             <div class="cmp-cell" data-col="comp1" data-dim="vol"><span class="cmp-val">—</span></div>
             <div class="cmp-cell" data-col="comp2" data-dim="vol"><span class="cmp-val">—</span></div>
           </div>
+          <div class="cmp-row" data-dim="sharpe">
+            <div class="cmp-rowlabel"><span class="cmp-dim">Sharpe 值</span><span class="cmp-unit">風險調整後報酬</span></div>
+            <div class="cmp-cell" data-col="lead" data-dim="sharpe"><span class="cmp-val">—</span></div>
+            <div class="cmp-cell" data-col="comp1" data-dim="sharpe"><span class="cmp-val">—</span></div>
+            <div class="cmp-cell" data-col="comp2" data-dim="sharpe"><span class="cmp-val">—</span></div>
+          </div>
+          <div class="cmp-row" data-dim="beta">
+            <div class="cmp-rowlabel"><span class="cmp-dim">Beta 值</span><span class="cmp-unit">相對大盤</span></div>
+            <div class="cmp-cell" data-col="lead" data-dim="beta"><span class="cmp-val">—</span></div>
+            <div class="cmp-cell" data-col="comp1" data-dim="beta"><span class="cmp-val">—</span></div>
+            <div class="cmp-cell" data-col="comp2" data-dim="beta"><span class="cmp-val">—</span></div>
+          </div>
           <div class="cmp-row" data-dim="rate_sens">
             <div class="cmp-rowlabel"><span class="cmp-dim">利率敏感度</span></div>
             <div class="cmp-cell" data-col="lead" data-dim="rate_sens"><span class="cmp-val">—</span></div>
@@ -345,8 +364,8 @@ export const HTML = `
   </div>
 
   <div class="cmp-footer">
-    <div class="cmp-source">資料來源占位：Morningstar、各基金公司官網、Lipper｜美元計價｜截至 2026/04/21</div>
-    <div class="cmp-disclaimer">投資警語占位：基金過去績效不代表未來表現，<br>投資人申購前應詳閱公開說明書。（實際警語人工填入）</div>
+    <div class="cmp-source">—</div>
+    <div class="cmp-disclaimer">—</div>
   </div>
 </div>`;
 
@@ -370,9 +389,34 @@ function competitorPool() {
 function dataOf(id) { return { ...(MOCK[id] || {}), ...(REAL[id] || {}) }; }
 // item4：投資特色以手動輸入為準，未編輯則回退中性通用預設（每檔/每欄相同，放哪都不怪）
 function featuresOf(id) { return S.features[id] ?? DEFAULT_FEATURES; }
-// 平均信評／存續期間：MoneyDJ HTML 抓不到，人工填為準；未編輯回退 MOCK（demo 保持完整）
-function creditOf(id)   { return S.credit[id]   ?? dataOf(id).credit   ?? '—'; }
-function durationOf(id) { return S.duration[id] ?? dataOf(id).duration ?? '—'; }
+// 單一取值入口（表格填值與領先勾選共用）：人工 > 真值 > MOCK；查無回 null（顯示「—」）。
+// 人工清空（''）視為「刻意不填」→ null，不會回退 MOCK。
+function valueOf(id, key) {
+  if (key === 'features') return featuresOf(id);
+  const m = S.manual[key];
+  if (m && id in m) return m[id] === '' ? null : m[id];
+  const v = dataOf(id)[key];
+  return v == null || v === '' ? null : v;
+}
+// 目前比較中的基金，哪些已勾選維度查無值（左側面板提示，不上圖）
+function missingDims() {
+  const out = [];
+  activeFunds().forEach(id => {
+    const miss = ALL_DIMS.filter(d => S.dims[d.key] && d.key !== 'features' && valueOf(id, d.key) == null)
+                         .map(d => d.label);
+    if (miss.length) out.push({ id, miss });
+  });
+  return out;
+}
+// 資料日期：取主打基金 MoneyDJ 淨值日期（getCompare.asOf）；無真值時回 null
+function asOfDate() {
+  return (REAL[S.lead] && REAL[S.lead].asOf) || activeFunds().map(id => REAL[id]?.asOf).find(Boolean) || null;
+}
+function sourceText() {
+  if (S.source != null) return S.source;
+  const d = asOfDate();
+  return `資料來源：MoneyDJ 理財網（報酬率、波動度）；平均信評、存續期間取自各基金月報｜原幣計價${d ? `｜截至 ${d}` : ''}`;
+}
 function num(v) {
   if (v == null) return null;
   const m = String(v).replace(/[^\d.\-]/g, '');
@@ -433,6 +477,7 @@ export function renderStep2(grid) {
           renderStep2(grid);
           _applyModeUI(); _refreshSelects(); _renderManualFields();
           if (window.updatePoster) window.updatePoster(); else update();
+          _ensureReal();
         },
       });
       row.appendChild(btn);
@@ -484,8 +529,21 @@ export function renderFields(container) {
         placeholder="輸入標題…">
     </div>
 
-    <div class="cmp-dim-group">投資特色・平均信評・存續期間（自行輸入）</div>
+    <div class="cmp-dim-group">各檔自行輸入欄位</div>
+    <div class="cmp-warn" id="cmpMissing" style="display:none;margin-top:6px"></div>
     <div id="cmpFeatEdit"></div>
+
+    <div class="cmp-dim-group">頁尾文字</div>
+    <div class="cmp-field" style="margin-top:6px">
+      <label>資料來源（清空＝依資料日期自動產生）</label>
+      <textarea class="data-input" id="cmpSource" rows="2"
+        style="width:100%;text-align:left;resize:vertical;line-height:1.5;font-family:inherit"></textarea>
+    </div>
+    <div class="cmp-field">
+      <label>投資警語（正式文字待法遵提供）</label>
+      <textarea class="data-input" id="cmpDisclaimer" rows="3"
+        style="width:100%;text-align:left;resize:vertical;line-height:1.5;font-family:inherit"></textarea>
+    </div>
 
     <div class="cmp-toggle">
       <div>
@@ -526,6 +584,8 @@ export function renderFields(container) {
   });
 
   container.querySelector('#cmpVPText').value = S.valueProp;
+  container.querySelector('#cmpSource').value = sourceText();
+  container.querySelector('#cmpDisclaimer').value = S.disclaimer;
   container.querySelector('#cmpAllCat').checked = S.showAllCat;
   container.querySelector('#cmpLogo').checked = S.showLogo;
   container.querySelector('#cmpWin').checked = S.showWin;
@@ -569,14 +629,14 @@ function _wireEvents(c) {
     if (!pool.find(f => f.fund_id === S.comp1)) S.comp1 = pool[0]?.fund_id || null;
     if (!pool.find(f => f.fund_id === S.comp2) || S.comp2 === S.comp1)
       S.comp2 = pool.find(f => f.fund_id !== S.comp1)?.fund_id || null;
-    _refreshSelects(); _renderManualFields(); upd();
+    _refreshSelects(); _renderManualFields(); upd(); _ensureReal();
   });
   c.querySelector('#cmpComp1').addEventListener('change', e => {
     S.comp1 = e.target.value;
     if (S.comp2 === S.comp1) S.comp2 = competitorPool().find(f => f.fund_id !== S.comp1)?.fund_id || null;
-    _refreshSelects(); _renderManualFields(); upd();
+    _refreshSelects(); _renderManualFields(); upd(); _ensureReal();
   });
-  c.querySelector('#cmpComp2').addEventListener('change', e => { S.comp2 = e.target.value; _refreshSelects(); _renderManualFields(); upd(); });
+  c.querySelector('#cmpComp2').addEventListener('change', e => { S.comp2 = e.target.value; _refreshSelects(); _renderManualFields(); upd(); _ensureReal(); });
   c.querySelector('#cmpAllCat').addEventListener('change', e => {
     S.showAllCat = e.target.checked;
     c.querySelector('#cmpCatWarn').style.display = e.target.checked ? '' : 'none';
@@ -587,6 +647,11 @@ function _wireEvents(c) {
   c.querySelector('#cmpVPText').addEventListener('input', e => {
     S.valueProp = e.target.value; upd();
   });
+  c.querySelector('#cmpSource').addEventListener('input', e => {
+    S.source = e.target.value.trim() === '' ? null : e.target.value; upd();
+  });
+  c.querySelector('#cmpSource').addEventListener('blur', e => { if (S.source == null) e.target.value = sourceText(); });
+  c.querySelector('#cmpDisclaimer').addEventListener('input', e => { S.disclaimer = e.target.value; upd(); });
   c.querySelector('#cmpLogo').addEventListener('change', e => { S.showLogo = e.target.checked; upd(); });
   c.querySelector('#cmpWin').addEventListener('change', e => { S.showWin = e.target.checked; upd(); });
   c.querySelector('#cmpCrown').addEventListener('change', e => { S.crown = e.target.checked; upd(); });
@@ -605,27 +670,34 @@ function _wireEvents(c) {
 
 // 依目前參與比較的基金，動態產生每檔的人工填寫欄位：投資特色 + 平均信評 + 存續期間。
 // 信評／存續期間 MoneyDJ HTML 抓不到（月報才有、且部分基金也沒有）→ 先人工填，
-// 未來要自動化時，可由多模態 LLM 從月報抽取後回填 S.credit / S.duration，介面不變。
+// 未來要自動化時，可由多模態 LLM 從月報抽取後回填 S.manual.credit / S.manual.duration，介面不變。
 function _renderManualFields() {
   const wrap = document.getElementById('cmpFeatEdit');
   if (!wrap) return;
   const cols = [['lead', S.lead, '★ 主打'], ['comp1', S.comp1, '競品 1']];
   if (S.mode === '1v1v1') cols.push(['comp2', S.comp2, '競品 2']);
   const shown = v => (v == null || v === '—') ? '' : String(v);
+  const RS_OPTS = ['', '低', '中', '中高', '高'];
   wrap.innerHTML = cols.map(([col, id, tag]) => {
     const f = fundById(id);
     const name = f ? f.display_name_zh : '—';
     const feat = esc(featuresOf(id).join('\n'));
+    const rs = shown(valueOf(id, 'rate_sens'));
+    const rsOpts = RS_OPTS.concat(RS_OPTS.includes(rs) ? [] : [rs])
+      .map(o => `<option value="${esc(o)}"${o === rs ? ' selected' : ''}>${o ? esc(o) : '利率敏感度…'}</option>`).join('');
     return `<div class="cmp-field" style="margin-top:10px">
-      <label>${tag}投資特色 · ${esc(name)}</label>
+      <label>${tag} · ${esc(name)}</label>
+      <input class="data-input" data-man-col="${col}" data-man-key="target" value="${esc(shown(valueOf(id, 'target')))}"
+        style="width:100%;text-align:left;margin-bottom:6px" placeholder="投資標的（一句話描述）">
       <textarea class="data-input" data-feat-col="${col}" rows="3"
         style="width:100%;text-align:left;resize:vertical;line-height:1.5;font-family:inherit"
-        placeholder="輸入投資特色…">${feat}</textarea>
+        placeholder="輸入投資特色（一行一點）…">${feat}</textarea>
       <div style="display:flex;gap:8px;margin-top:6px">
-        <input class="data-input" data-credit-col="${col}" value="${esc(shown(creditOf(id)))}"
-          style="flex:1;text-align:left" placeholder="平均信評（如 BB-）">
-        <input class="data-input" data-dur-col="${col}" value="${esc(shown(durationOf(id)))}"
-          style="flex:1;text-align:left" placeholder="存續期間（如 2.8年）">
+        <input class="data-input" data-man-col="${col}" data-man-key="credit" value="${esc(shown(valueOf(id, 'credit')))}"
+          style="flex:1;min-width:0;text-align:left" placeholder="平均信評（如 BB-）">
+        <input class="data-input" data-man-col="${col}" data-man-key="duration" value="${esc(shown(valueOf(id, 'duration')))}"
+          style="flex:1;min-width:0;text-align:left" placeholder="存續期間（如 2.8年）">
+        <select class="cmp-select" data-man-col="${col}" data-man-key="rate_sens" style="flex:1;min-width:0">${rsOpts}</select>
       </div>
     </div>`;
   }).join('');
@@ -637,16 +709,22 @@ function _renderManualFields() {
       S.features[id] = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
       upd();
     }));
-  wrap.querySelectorAll('input[data-credit-col]').forEach(inp =>
-    inp.addEventListener('input', e => {
-      const id = idOf(e.target.dataset.creditCol); if (!id) return;
-      S.credit[id] = e.target.value.trim(); upd();
+  wrap.querySelectorAll('[data-man-key]').forEach(el =>
+    el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', e => {
+      const id = idOf(e.target.dataset.manCol); if (!id) return;
+      S.manual[e.target.dataset.manKey][id] = e.target.value.trim(); upd();
     }));
-  wrap.querySelectorAll('input[data-dur-col]').forEach(inp =>
-    inp.addEventListener('input', e => {
-      const id = idOf(e.target.dataset.durCol); if (!id) return;
-      S.duration[id] = e.target.value.trim(); upd();
-    }));
+}
+
+// 依參與比較的基金，提示哪些已勾選維度查無值（只在面板提示、不上圖）
+function _renderMissing() {
+  const box = document.getElementById('cmpMissing');
+  if (!box) return;
+  const list = missingDims();
+  box.style.display = list.length ? '' : 'none';
+  const nm = id => { const f = fundById(id); return f ? f.display_name_zh + (f.share_class_zh ? `（${f.share_class_zh}）` : '') : id; };
+  box.innerHTML = list.map(({ id, miss }) => `⚠️ ${esc(nm(id))}：${esc(miss.join('、'))} 尚無資料`).join('<br>')
+    + '<br>圖上會顯示「—」。可在下方補填，或取消勾選該維度。';
 }
 
 // item3：績效走勢圖 — 依選定區間畫各基金「累積報酬率走勢」多線比較（canvas，相容 html2canvas 匯出）。
@@ -787,11 +865,7 @@ export function update() {
     Object.entries(cols).forEach(([col, id]) => {
       const cell = root.querySelector(`.cmp-cell[data-col="${col}"][data-dim="${dim.key}"]`);
       if (!cell) return;
-      const d = dataOf(id);
-      const v = dim.key === 'features' ? featuresOf(id)
-              : dim.key === 'credit'   ? creditOf(id)
-              : dim.key === 'duration' ? durationOf(id)
-              : d[dim.key];
+      const v = valueOf(id, dim.key);
       cell.classList.remove('cmp-neg');
       // 移除舊的領先勾選
       cell.querySelectorAll('.cmp-win').forEach(w => w.remove());
@@ -812,21 +886,21 @@ export function update() {
   // 領先勾選（每個有規則的維度，在參與比較的基金中找最佳者）；item2：可由開關關閉
   if (S.showWin) Object.entries(WIN_RULE).forEach(([key, rule]) => {
     if (!S.dims[key]) return;
-    let best = null, bestVal = null;
-    funds.forEach(id => {
-      const raw = dataOf(id)[key];
-      const n = rule === 'low_ord' ? ordVal(raw) : num(raw);
-      if (n == null) return;
-      if (bestVal == null
-        || (rule === 'high' && n > bestVal)
-        || ((rule === 'low' || rule === 'low_ord') && n < bestVal)) {
-        bestVal = n; best = id;
-      }
+    // 同分並列都打勾；全部同分（或只有一檔有值）則不標，避免無意義的勾
+    const vals = funds.map(id => {
+      const raw = valueOf(id, key);
+      return [id, rule === 'low_ord' ? ordVal(raw) : num(raw)];
+    }).filter(([, n]) => n != null);
+    if (vals.length < 2) return;
+    const ns = vals.map(([, n]) => n);
+    const bestVal = rule === 'high' ? Math.max(...ns) : Math.min(...ns);
+    const winners = vals.filter(([, n]) => n === bestVal).map(([id]) => id);
+    if (winners.length === vals.length) return;
+    winners.forEach(id => {
+      const col = id === S.lead ? 'lead' : id === S.comp1 ? 'comp1' : 'comp2';
+      const cell = root.querySelector(`.cmp-cell[data-col="${col}"][data-dim="${key}"]`);
+      if (cell) cell.insertAdjacentHTML('beforeend', WIN_SVG);
     });
-    if (!best) return;
-    const col = best === S.lead ? 'lead' : best === S.comp1 ? 'comp1' : 'comp2';
-    const cell = root.querySelector(`.cmp-cell[data-col="${col}"][data-dim="${key}"]`);
-    if (cell) cell.insertAdjacentHTML('beforeend', WIN_SVG);
   });
 
   // 結論條列 = 主打投資特色
@@ -836,8 +910,18 @@ export function update() {
     cbull.innerHTML = f.length ? f.map(x => `<li>${esc(x)}</li>`).join('') : '';
   }
 
+  // 資料日期＋頁尾
+  const d = asOfDate();
+  const asof = root.querySelector('.cmp-asof');
+  if (asof) asof.textContent = d || '—';
+  const src = root.querySelector('.cmp-source');
+  if (src) src.textContent = sourceText();
+  const disc = root.querySelector('.cmp-disclaimer');
+  if (disc) disc.textContent = S.disclaimer;
+
   // item3：績效圖
   _renderPerfChart();
+  _renderMissing();
 
   // LINE 文字
   const mb = document.getElementById('msgBox');
@@ -881,7 +965,49 @@ export function getActivePosterEl(_tpl) { return document.getElementById('poster
 //   getFunds  → 重建 REGISTRY（下拉選單＝客戶維護的上架基金）
 //   getCompare→ 抓「當下比較的 2~3 檔」真值（vol/報酬率）蓋掉 MOCK；只抓當下選的，不全抓
 // 失敗則靜默維持現有（mock）狀態。
+let _SCRIPT = null;    // 記住 web-app URL，切換基金時補抓
+const _pct = v => (v == null || v === '' || v === 'N/A') ? undefined : String(v).replace(/%$/, '') + '%';
+const _raw = v => (v == null || v === '' || v === 'N/A') ? undefined : String(v);
+
+// getCompare 回傳 → 前端維度。GAS 端只加不改欄位（與 Session B 的約定）：
+//   既有：asOf / ytd / vol / sharpe / beta / y1 / y2 / y3 / y5
+//   新增：yield（wb05 年化配息率）、maxdd（含息序列算出的最大回撤，負值）
+function _mapCompare(d) {
+  const r = {
+    asOf: _raw(d.asOf),
+    vol: _pct(d.vol), custom: _pct(d.ytd), y1: _pct(d.y1), y2: _pct(d.y2), y3: _pct(d.y3),
+    sharpe: _raw(d.sharpe), beta: _raw(d.beta),
+    yield: _pct(d.yield), maxdd: _pct(d.maxdd),
+  };
+  Object.keys(r).forEach(k => r[k] === undefined && delete r[k]);
+  return r;
+}
+async function _fetchCompare(codes) {
+  if (!_SCRIPT || !codes.length) return false;
+  const comp = await fetch(`${_SCRIPT}?action=getCompare&codes=${encodeURIComponent(codes.join(','))}`).then(r => r.json());
+  Object.entries(comp || {}).forEach(([code, d]) => {
+    if (!d || d.error) { REAL[code] = REAL[code] || {}; return; }   // 記錄已抓過，避免重複打
+    REAL[code] = _mapCompare(d);
+  });
+  return true;
+}
+// 切換主打／競品後：補抓尚未有真值的基金（只抓缺的那幾檔），抓完重繪
+const _pending = new Set();
+async function _ensureReal() {
+  const need = activeFunds().filter(id => !(id in REAL) && !_pending.has(id));
+  if (!need.length) return;
+  need.forEach(id => _pending.add(id));                              // 防重入（連續切換）
+  try {
+    if (await _fetchCompare(need)) {
+      _renderManualFields();
+      window.updatePoster ? window.updatePoster() : update();
+    }
+  } catch (e) { console.warn('[compare] 補抓失敗：', e); }
+  finally { need.forEach(id => _pending.delete(id)); }
+}
+
 export async function fetchData(SCRIPT) {
+  _SCRIPT = SCRIPT || null;
   if (!SCRIPT) { update(); return; }
   try {
     const funds = await fetch(`${SCRIPT}?action=getFunds`).then(r => r.json());
@@ -898,21 +1024,8 @@ export async function fetchData(SCRIPT) {
       if (!has(S.comp1) || S.comp1 === S.lead) S.comp1 = (pool.find(f => !f.is_barings) || pool[0] || {}).fund_id || null;
       if (!has(S.comp2) || S.comp2 === S.comp1 || S.comp2 === S.lead) S.comp2 = (pool.find(f => f.fund_id !== S.comp1) || {}).fund_id || null;
     }
-    // 只抓當下比較的基金真值（快）
-    const codes = activeFunds().filter(Boolean).join(',');
-    if (codes) {
-      const comp = await fetch(`${SCRIPT}?action=getCompare&codes=${encodeURIComponent(codes)}`).then(r => r.json());
-      Object.entries(comp || {}).forEach(([code, d]) => {
-        if (!d || d.error) return;
-        const r = {};
-        if (d.vol != null) r.vol = d.vol + '%';
-        if (d.ytd != null) r.custom = d.ytd + '%';
-        if (d.y1 != null) r.y1 = d.y1 + '%';
-        if (d.y2 != null) r.y2 = d.y2 + '%';
-        if (d.y3 != null) r.y3 = d.y3 + '%';
-        REAL[code] = r;
-      });
-    }
+    // 只抓當下比較的基金真值（快）；之後切換基金由 _ensureReal() 補抓
+    await _fetchCompare(activeFunds().filter(Boolean));
   } catch (e) {
     console.warn('[compare] fetchData 失敗，維持 mock：', e);
   }
