@@ -91,7 +91,7 @@ export const CSS = `
   padding: 48px 56px 44px;
 }
 .night-logo-wrap { text-align: center; margin-bottom: 14px; }
-.night-logo { width: 280px; height: auto; filter: brightness(0) invert(1); }
+.night-logo { width: 280px; height: auto; }  /* 直接用白色版 logo 檔：不靠 CSS filter（html2canvas 不支援、即時轉色有載入時差） */
 
 .night-month-pill {
   display: inline-block;
@@ -541,7 +541,7 @@ export const HTML = `
           <div class="stars-layer" id="starsLayer"></div>
           <div class="night-content">
             <div class="night-logo-wrap">
-              <img class="night-logo" src="./assets/barings-logo.png" alt="BARINGS">
+              <img class="night-logo" src="./assets/barings-logo-white.png" alt="BARINGS">
             </div>
             <div class="night-month-wrap">
               <div class="night-month-pill" id="nMonthLabel">MAY · 2026</div>
@@ -915,25 +915,7 @@ export function onDownloadClone(doc, tplKey) {
     el.style.background           = 'linear-gradient(180deg,#ffffff 0%,#fbf3f1 100%)';
   });
 
-  // 修正夜空 Logo（html2canvas 不支援 CSS filter，用 canvas 手動轉白）
-  if (tplKey === 'starlight') {
-    const nightLogo = doc.querySelector('.night-logo');
-    if (nightLogo) {
-      const origLogo = document.querySelector('.night-logo');
-      if (origLogo && origLogo.complete && origLogo.naturalWidth) {
-        const cv = document.createElement('canvas');
-        cv.width  = origLogo.naturalWidth;
-        cv.height = origLogo.naturalHeight;
-        const ctx = cv.getContext('2d');
-        ctx.drawImage(origLogo, 0, 0);
-        ctx.globalCompositeOperation = 'source-in';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, cv.width, cv.height);
-        nightLogo.src = cv.toDataURL('image/png');
-      }
-      nightLogo.style.filter = 'none';
-    }
-  }
+  // 夜空 Logo 已改用白色版檔案（assets/barings-logo-white.png），不需在此轉色
 }
 
 export function getDownloadFileName(state) {
