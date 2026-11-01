@@ -418,7 +418,8 @@ function asOfDate() {
 function sourceText() {
   if (S.source != null) return S.source;
   const d = asOfDate();
-  return `資料來源：MoneyDJ 理財網（報酬率、波動度、年化配息率）；平均信評、存續期間取自各基金月報｜原幣計價${d ? `｜截至 ${d}` : ''}`;
+  const dd = S.dims.maxdd ? '；最大回撤依 MoneyDJ 近一年含息累積報酬計算' : '';
+  return `資料來源：MoneyDJ 理財網（報酬率、波動度、年化配息率）${dd}；平均信評、存續期間取自各基金月報｜原幣計價${d ? `｜截至 ${d}` : ''}`;
 }
 function num(v) {
   if (v == null) return null;
