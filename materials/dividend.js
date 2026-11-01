@@ -880,6 +880,9 @@ export function showPoster(tplKey) {
 // html2canvas 修正
 // ============================================================
 export function onDownloadClone(doc, tplKey) {
+  // 晨曦的顆粒質感層（SVG feTurbulence + mix-blend-mode:overlay）：html2canvas 不支援 blend，
+  // Safari 又把 SVG 濾鏡雜訊畫成灰黑色 → 整張海報被蓋一層暗色。產圖時直接移除（Chrome 下本來也幾乎看不出）。
+  doc.querySelectorAll('.grain').forEach(el => { el.style.display = 'none'; });
   // 修正漸層文字（html2canvas 不支援 background-clip: text）
   // 注意：.date-big 限定在 #poster（晨曦），避免影響玫瑰版同名 class
   [
