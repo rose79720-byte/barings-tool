@@ -30,6 +30,8 @@ let REGISTRY = await fetch('./data/funds.json')
   .then(r => r.json())
   .then(d => d.funds.map(f => ({ ...f, fund_id: f.moneydj_code })))
   .catch(() => []);
+let SERIES = {};       // 含息累積報酬序列（key = code）：getSeries → {asOf, points:[['YYYY/MM/DD', cumPct]]}
+let SERIES_OK = false; // web-app 支援 getSeries（已部署新版）→ 走勢圖只畫真實線；否則整張退回示意
 let REAL = {};   // 真值快取（key = MoneyDJ code）：getCompare 抓到的真值覆蓋 MOCK；{} = 已抓過但無資料
 
 // ------------------------------------------------------------
@@ -55,13 +57,13 @@ const RET_DIMS = [
 ];
 const ALL_DIMS = [...CORE_DIMS, ...RET_DIMS];
 
-// item3：績效走勢圖的時間區間（月數）
+// item3：績效走勢圖的時間區間。MoneyDJ wb06 只提供近一年含息累積報酬 → 最長一年。
+// months=null 表示今年以來（自當年 1/1 起）。
 const TREND_PERIODS = [
-  { key: 'm3', label: '近三月', months: 3 },
-  { key: 'm6', label: '近六月', months: 6 },
-  { key: 'y1', label: '近一年', months: 12 },
-  { key: 'y3', label: '近三年', months: 36 },
-  { key: 'y5', label: '近五年', months: 60 },
+  { key: 'm3',  label: '近三月',   months: 3 },
+  { key: 'm6',  label: '近六月',   months: 6 },
+  { key: 'ytd', label: '今年以來', months: null },
+  { key: 'y1',  label: '近一年',   months: 12 },
 ];
 
 // 「領先勾選」規則：high=越大越好、low=越小越好、low_ord=利率敏感度(低<中<高)
@@ -121,7 +123,7 @@ const S = {
   manual: { target: {}, rate_sens: {}, credit: {}, duration: {} },
   source: null,           // 頁尾資料來源（null = 依資料日期自動組字）
   disclaimer: '基金過去績效不代表未來表現，投資人申購前應詳閱公開說明書。',
-  perfPeriod: 'y1',       // item3：績效圖顯示的區間（RET_DIMS 的 key：custom/y1/y2/y3）
+  perfPeriod: 'y1',       // item3：績效圖顯示的區間（TREND_PERIODS 的 key：m3/m6/ytd/y1）
   showLogo: true,         // item1：LOGO 顯示開關（保留開關、預設開啟）
   showWin: true,          // item2：勝出勾選（✔）顯示開關（保留開關、預設開啟）
   crown: false,           // 「綜合表現領先」徽章（合規預設關）
@@ -321,13 +323,13 @@ export const HTML = `
             <div class="cmp-cell" data-col="comp2" data-dim="credit"><span class="cmp-val">—</span></div>
           </div>
           <div class="cmp-row" data-dim="yield">
-            <div class="cmp-rowlabel"><span class="cmp-dim">收益率</span><span class="cmp-unit">殖利率</span></div>
+            <div class="cmp-rowlabel"><span class="cmp-dim">收益率</span><span class="cmp-unit">年化配息率</span></div>
             <div class="cmp-cell" data-col="lead" data-dim="yield"><span class="cmp-val">—</span></div>
             <div class="cmp-cell" data-col="comp1" data-dim="yield"><span class="cmp-val">—</span></div>
             <div class="cmp-cell" data-col="comp2" data-dim="yield"><span class="cmp-val">—</span></div>
           </div>
           <div class="cmp-row" data-dim="maxdd">
-            <div class="cmp-rowlabel"><span class="cmp-dim">最大回撤</span><span class="cmp-unit">過去 3 年</span></div>
+            <div class="cmp-rowlabel"><span class="cmp-dim">最大回撤</span><span class="cmp-unit">近一年・含息</span></div>
             <div class="cmp-cell" data-col="lead" data-dim="maxdd"><span class="cmp-val">—</span></div>
             <div class="cmp-cell" data-col="comp1" data-dim="maxdd"><span class="cmp-val">—</span></div>
             <div class="cmp-cell" data-col="comp2" data-dim="maxdd"><span class="cmp-val">—</span></div>
@@ -350,7 +352,7 @@ export const HTML = `
 
     <div class="cmp-col cmp-right">
       <div class="cmp-perf-wrap">
-        <div class="cmp-sechead"><span class="cmp-sectitle">報酬率表現比較</span><span class="cmp-secsub">年化／含息</span><span class="cmp-secline"></span></div>
+        <div class="cmp-sechead"><span class="cmp-sectitle">報酬率表現比較</span><span class="cmp-secsub">含息累積報酬</span><span class="cmp-secline"></span></div>
         <div class="cmp-perf-chart" id="cmpPerfChart"></div>
       </div>
 
@@ -386,7 +388,15 @@ function competitorPool() {
     return lead && f.category === lead.category;
   });
 }
-function dataOf(id) { return { ...(MOCK[id] || {}), ...(REAL[id] || {}) }; }
+// GAS getCompare 負責的數值維度：該檔已抓到真值（有 asOf）就不再回退 MOCK，
+// 避免「某欄位沒抓到 → 默默顯示假數字」混進真實資料上圖。
+const GAS_KEYS = ['vol', 'sharpe', 'beta', 'yield', 'maxdd', 'custom', 'y1', 'y2', 'y3'];
+function dataOf(id) {
+  const real = REAL[id] || {};
+  const mock = { ...(MOCK[id] || {}) };
+  if (real.asOf) GAS_KEYS.forEach(k => delete mock[k]);
+  return { ...mock, ...real };
+}
 // item4：投資特色以手動輸入為準，未編輯則回退中性通用預設（每檔/每欄相同，放哪都不怪）
 function featuresOf(id) { return S.features[id] ?? DEFAULT_FEATURES; }
 // 單一取值入口（表格填值與領先勾選共用）：人工 > 真值 > MOCK；查無回 null（顯示「—」）。
@@ -404,6 +414,7 @@ function missingDims() {
   activeFunds().forEach(id => {
     const miss = ALL_DIMS.filter(d => S.dims[d.key] && d.key !== 'features' && valueOf(id, d.key) == null)
                          .map(d => d.label);
+    if (SERIES_OK && !SERIES[id]) miss.push('走勢圖');
     if (miss.length) out.push({ id, miss });
   });
   return out;
@@ -415,7 +426,7 @@ function asOfDate() {
 function sourceText() {
   if (S.source != null) return S.source;
   const d = asOfDate();
-  return `資料來源：MoneyDJ 理財網（報酬率、波動度）；平均信評、存續期間取自各基金月報｜原幣計價${d ? `｜截至 ${d}` : ''}`;
+  return `資料來源：MoneyDJ 理財網（報酬率、波動度、年化配息率）；平均信評、存續期間取自各基金月報｜原幣計價${d ? `｜截至 ${d}` : ''}`;
 }
 function num(v) {
   if (v == null) return null;
@@ -727,23 +738,42 @@ function _renderMissing() {
     + '<br>圖上會顯示「—」。可在下方補填，或取消勾選該維度。';
 }
 
-// item3：績效走勢圖 — 依選定區間畫各基金「累積報酬率走勢」多線比較（canvas，相容 html2canvas 匯出）。
-// 現用 mock 時間序列（示意），之後把 mockSeries() 換成 MoneyDJ 真實歷史序列即可；主打霸菱深藍粗線、競品灰細線。
+// item3：績效走勢圖 — 依選定區間畫各基金「含息累積報酬率走勢」多線比較（canvas，相容 html2canvas 匯出）。
+// 資料：MoneyDJ wb06 已算好的含息累積報酬（getSeries）；區間切換＝對 MoneyDJ 累積值換基準點
+//   (1+c_t)/(1+c_start)-1，不從淨值自行還原。web-app 尚無 getSeries 時整張退回示意序列並標註。
+// 主打霸菱深藍粗線、競品灰細線。
+const _ymd = s => { const [y, m, d] = String(s).split('/').map(Number); return new Date(y, m - 1, d).getTime(); };
+const _fmtD = t => { const d = new Date(t); return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`; };
+// 回傳 [[時間戳, 財富指數 W]]（W = 1 + 累積報酬）
+function _wealthOf(id) {
+  if (SERIES_OK) {
+    const s = SERIES[id];
+    return s ? s.points.map(([d, c]) => [_ymd(d), 1 + c / 100]) : null;   // 真實模式：缺就不畫，絕不補假線
+  }
+  const lv = mockSeries(id), now = new Date();                           // 示意模式：月點，最後一點＝本月
+  return lv.map((v, i) => [new Date(now.getFullYear(), now.getMonth() - (lv.length - 1 - i), 1).getTime(), v / 100]);
+}
 function _renderPerfChart() {
   const host = document.getElementById('cmpPerfChart');
   if (!host) return;
-  const per = TREND_PERIODS.find(p => p.key === S.perfPeriod) || TREND_PERIODS[2];
+  const per = TREND_PERIODS.find(p => p.key === S.perfPeriod) || TREND_PERIODS[TREND_PERIODS.length - 1];
   const series = activeFunds().map(id => {
-    const full = mockSeries(id);
-    const win = full.slice(Math.max(0, full.length - 1 - per.months));
-    const base = win[0] || 1;
+    const w = _wealthOf(id);
+    if (!w || w.length < 2) return null;
+    const endT = w[w.length - 1][0], ed = new Date(endT);
+    const startT = per.months == null
+      ? new Date(ed.getFullYear(), 0, 1).getTime()
+      : new Date(ed.getFullYear(), ed.getMonth() - per.months, ed.getDate()).getTime();
+    const win = w.filter(([t]) => t >= startT);
+    if (win.length < 2) return null;
+    const base = win[0][1];
     const f = fundById(id);
     return {
       id, isLead: id === S.lead,
       name: (f ? (f.fund_house || f.short_name_zh || f.display_name_zh) : '—').replace(/[（(].*$/, '').trim() || '—',
-      cum: win.map(v => (v / base - 1) * 100),
+      pts: win.map(([t, v]) => [t, (v / base - 1) * 100]),
     };
-  });
+  }).filter(Boolean);
 
   host.innerHTML = `<div class="cmp-pc-title"><b>${esc(per.label)}</b> 報酬率走勢比較</div>`;
   const cssW = host.clientWidth || 680, cssH = 340, dpr = 2;
@@ -751,18 +781,21 @@ function _renderPerfChart() {
   canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
   canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
   host.appendChild(canvas);
-  host.insertAdjacentHTML('beforeend',
-    `<div class="cmp-pc-note">＊區間累積報酬率、以起點為 0；深色為主打基金。過去績效不代表未來表現。（示意資料，待接真實歷史淨值）</div>`);
+  host.insertAdjacentHTML('beforeend', SERIES_OK
+    ? `<div class="cmp-pc-note">＊含息累積報酬率（資料來源：MoneyDJ），以區間起點為 0；深色為主打基金。過去績效不代表未來表現。</div>`
+    : `<div class="cmp-pc-note">＊區間累積報酬率、以起點為 0；深色為主打基金。過去績效不代表未來表現。（示意資料，非實際績效）</div>`);
+  if (!series.length) return;
 
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
   const L = 46, R = 100, T = 14, B = 28;
   const pw = cssW - L - R, ph = cssH - T - B;
-  const npts = Math.max(2, series[0]?.cum.length || 2);
-  const allV = series.flatMap(s => s.cum).concat([0]);
+  const t0 = Math.min(...series.map(s => s.pts[0][0]));
+  const t1 = Math.max(...series.map(s => s.pts[s.pts.length - 1][0]));
+  const allV = series.flatMap(s => s.pts.map(p => p[1])).concat([0]);
   let ymin = Math.min(...allV), ymax = Math.max(...allV);
   const pad = (ymax - ymin) * 0.14 || 1; ymin -= pad; ymax += pad;
-  const X = i => L + (npts <= 1 ? 0 : i / (npts - 1)) * pw;
+  const X = t => L + (t1 > t0 ? (t - t0) / (t1 - t0) : 0) * pw;
   const Y = v => T + (1 - (v - ymin) / (ymax - ymin)) * ph;
 
   // 水平格線 + y 軸 %
@@ -778,10 +811,8 @@ function _renderPerfChart() {
   const y0 = Y(0); ctx.strokeStyle = '#c2c8d2'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(L, y0); ctx.lineTo(L + pw, y0); ctx.stroke();
   // x 軸起訖月份
-  const now = new Date();
-  const endLbl = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const sd = new Date(now.getFullYear(), now.getMonth() - per.months, 1);
-  const startLbl = `${sd.getFullYear()}/${String(sd.getMonth() + 1).padStart(2, '0')}`;
+  const fmt = SERIES_OK ? _fmtD : (t => _fmtD(t).slice(0, 7));
+  const startLbl = fmt(t0), endLbl = fmt(t1);
   ctx.fillStyle = '#9aa0ab'; ctx.textBaseline = 'top';
   ctx.textAlign = 'left'; ctx.fillText(startLbl, L, T + ph + 8);
   ctx.textAlign = 'right'; ctx.fillText(endLbl, L + pw, T + ph + 8);
@@ -794,12 +825,12 @@ function _renderPerfChart() {
     ctx.lineWidth = s.isLead ? 3.4 : 2;
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.beginPath();
-    s.cum.forEach((v, i) => { const px = X(i), py = Y(v); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+    s.pts.forEach(([t, v], i) => { const px = X(t), py = Y(v); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
     ctx.stroke();
-    const li = s.cum.length - 1, ex = X(li), ey = Y(s.cum[li]);
+    const [lt, lv] = s.pts[s.pts.length - 1], ex = X(lt), ey = Y(lv);
     ctx.fillStyle = s.isLead ? '#1a2a52' : '#aab2c0';
     ctx.beginPath(); ctx.arc(ex, ey, s.isLead ? 4.5 : 3.5, 0, Math.PI * 2); ctx.fill();
-    const val = s.cum[li];
+    const val = lv;
     labels.push({ ex, ey, lead: s.isLead, text: `${s.name} ${val >= 0 ? '+' : ''}${val.toFixed(1)}%` });
   });
   // 端點標籤垂直去重疊
@@ -984,13 +1015,30 @@ function _mapCompare(d) {
 }
 async function _fetchCompare(codes) {
   if (!_SCRIPT || !codes.length) return false;
-  const comp = await fetch(`${_SCRIPT}?action=getCompare&codes=${encodeURIComponent(codes.join(','))}`).then(r => r.json());
+  const q = encodeURIComponent(codes.join(','));
+  const [comp] = await Promise.all([
+    fetch(`${_SCRIPT}?action=getCompare&codes=${q}`).then(r => r.json()),
+    _fetchSeries(q),
+  ]);
   Object.entries(comp || {}).forEach(([code, d]) => {
     if (!d || d.error) { REAL[code] = REAL[code] || {}; return; }   // 記錄已抓過，避免重複打
     REAL[code] = _mapCompare(d);
   });
   return true;
 }
+// getSeries 抓完整近一年（不帶 from），區間切換在前端換基準點，不必重抓。
+// 舊版 web-app 回 {error:'unknown action'} → SERIES_OK=false，走勢圖退回示意。
+async function _fetchSeries(q) {
+  try {
+    const res = await fetch(`${_SCRIPT}?action=getSeries&codes=${q}`).then(r => r.json());
+    if (!res || res.error) return;
+    SERIES_OK = true;
+    Object.entries(res).forEach(([code, d]) => {
+      if (d && Array.isArray(d.points) && d.points.length) SERIES[code] = d;
+    });
+  } catch (e) { console.warn('[compare] getSeries 失敗：', e); }
+}
+
 // 切換主打／競品後：補抓尚未有真值的基金（只抓缺的那幾檔），抓完重繪
 const _pending = new Set();
 async function _ensureReal() {
