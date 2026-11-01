@@ -57,14 +57,7 @@ const RET_DIMS = [
 ];
 const ALL_DIMS = [...CORE_DIMS, ...RET_DIMS];
 
-// item3：績效走勢圖的時間區間。MoneyDJ wb06 只提供近一年含息累積報酬 → 最長一年。
-// months=null 表示今年以來（自當年 1/1 起）。
-const TREND_PERIODS = [
-  { key: 'm3',  label: '近三月',   months: 3 },
-  { key: 'm6',  label: '近六月',   months: 6 },
-  { key: 'ytd', label: '今年以來', months: null },
-  { key: 'y1',  label: '近一年',   months: 12 },
-];
+// item3：績效走勢圖照 MoneyDJ wb06 原樣呈現：固定近一年、MoneyDJ 給的含息累積報酬直接畫，不切區間、不換基準點。
 
 // 「領先勾選」規則：high=越大越好、low=越小越好、low_ord=利率敏感度(低<中<高)
 // 沒列出的維度(target/credit/features)不標領先。
@@ -123,7 +116,6 @@ const S = {
   manual: { target: {}, rate_sens: {}, credit: {}, duration: {} },
   source: null,           // 頁尾資料來源（null = 依資料日期自動組字）
   disclaimer: '基金過去績效不代表未來表現，投資人申購前應詳閱公開說明書。',
-  perfPeriod: 'y1',       // item3：績效圖顯示的區間（TREND_PERIODS 的 key：m3/m6/ytd/y1）
   showLogo: true,         // item1：LOGO 顯示開關（保留開關、預設開啟）
   showWin: true,          // item2：勝出勾選（✔）顯示開關（保留開關、預設開啟）
   crown: false,           // 「綜合表現領先」徽章（合規預設關）
@@ -530,9 +522,7 @@ export function renderFields(container) {
 
     <div class="cmp-dim-group">核心數據比較</div>
     <div id="cmpCoreChecks"></div>
-    <div class="cmp-dim-group">績效圖・比較區間（單選）</div>
-    <div id="cmpPeriodSel"></div>
-    <div class="cmp-warn" style="margin-top:6px">＊「今年以來（YTD）」起算點需法遵確認</div>
+    <div class="cmp-warn" style="margin-top:6px">＊報酬率「今年以來（YTD）」起算點需法遵確認</div>
 
     <div class="cmp-field" style="margin-top:14px">
       <label>價值主張／標題（自行輸入）</label>
@@ -585,14 +575,7 @@ export function renderFields(container) {
     return lab;
   };
   CORE_DIMS.forEach(d => container.querySelector('#cmpCoreChecks').appendChild(mkCheck(d)));
-  const psel = container.querySelector('#cmpPeriodSel');
-  TREND_PERIODS.forEach(d => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.dataset.period = d.key; b.textContent = d.label;
-    b.style.cssText = 'padding:7px 13px;margin:0 8px 8px 0;border-radius:8px;border:1px solid #dde0e6;font:600 13px sans-serif;cursor:pointer;'
-      + (S.perfPeriod === d.key ? 'background:#1a2a52;color:#fff;border-color:#1a2a52' : 'background:#fff;color:#5b6573');
-    psel.appendChild(b);
-  });
+
 
   container.querySelector('#cmpVPText').value = S.valueProp;
   container.querySelector('#cmpSource').value = sourceText();
@@ -666,17 +649,6 @@ function _wireEvents(c) {
   c.querySelector('#cmpLogo').addEventListener('change', e => { S.showLogo = e.target.checked; upd(); });
   c.querySelector('#cmpWin').addEventListener('change', e => { S.showWin = e.target.checked; upd(); });
   c.querySelector('#cmpCrown').addEventListener('change', e => { S.crown = e.target.checked; upd(); });
-  c.querySelector('#cmpPeriodSel').addEventListener('click', e => {
-    const btn = e.target.closest('button[data-period]'); if (!btn) return;
-    S.perfPeriod = btn.dataset.period;
-    c.querySelectorAll('#cmpPeriodSel button').forEach(b => {
-      const on = b.dataset.period === S.perfPeriod;
-      b.style.background = on ? '#1a2a52' : '#fff';
-      b.style.color = on ? '#fff' : '#5b6573';
-      b.style.borderColor = on ? '#1a2a52' : '#dde0e6';
-    });
-    upd();
-  });
 }
 
 // 依目前參與比較的基金，動態產生每檔的人工填寫欄位：投資特色 + 平均信評 + 存續期間。
@@ -739,8 +711,8 @@ function _renderMissing() {
 }
 
 // item3：績效走勢圖 — 依選定區間畫各基金「含息累積報酬率走勢」多線比較（canvas，相容 html2canvas 匯出）。
-// 資料：MoneyDJ wb06 已算好的含息累積報酬（getSeries）；區間切換＝對 MoneyDJ 累積值換基準點
-//   (1+c_t)/(1+c_start)-1，不從淨值自行還原。web-app 尚無 getSeries 時整張退回示意序列並標註。
+// 資料：MoneyDJ wb06 已算好的含息累積報酬（getSeries），照原樣畫近一年，不從淨值自行還原。
+//   web-app 尚無 getSeries 時整張退回示意序列並標註。
 // 主打霸菱深藍粗線、競品灰細線。
 const _ymd = s => { const [y, m, d] = String(s).split('/').map(Number); return new Date(y, m - 1, d).getTime(); };
 const _fmtD = t => { const d = new Date(t); return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`; };
@@ -756,15 +728,10 @@ function _wealthOf(id) {
 function _renderPerfChart() {
   const host = document.getElementById('cmpPerfChart');
   if (!host) return;
-  const per = TREND_PERIODS.find(p => p.key === S.perfPeriod) || TREND_PERIODS[TREND_PERIODS.length - 1];
   const series = activeFunds().map(id => {
     const w = _wealthOf(id);
     if (!w || w.length < 2) return null;
-    const endT = w[w.length - 1][0], ed = new Date(endT);
-    const startT = per.months == null
-      ? new Date(ed.getFullYear(), 0, 1).getTime()
-      : new Date(ed.getFullYear(), ed.getMonth() - per.months, ed.getDate()).getTime();
-    const win = w.filter(([t]) => t >= startT);
+    const win = SERIES_OK ? w : w.slice(-13);   // 真實：MoneyDJ 給的近一年全段；示意：取最後 12 個月
     if (win.length < 2) return null;
     const base = win[0][1];
     const f = fundById(id);
@@ -775,7 +742,7 @@ function _renderPerfChart() {
     };
   }).filter(Boolean);
 
-  host.innerHTML = `<div class="cmp-pc-title"><b>${esc(per.label)}</b> 報酬率走勢比較</div>`;
+  host.innerHTML = `<div class="cmp-pc-title"><b>近一年</b> 報酬率走勢比較</div>`;
   const cssW = host.clientWidth || 680, cssH = 340, dpr = 2;
   const canvas = document.createElement('canvas');
   canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
