@@ -1,7 +1,7 @@
 // ============================================================
 // 競品比較圖 素材模組（橫式 1920×1080，給簡報用）
 //
-// 沿用素材契約：CSS / HTML / renderFields / renderMsg / update /
+// 沿用素材契約：CSS / HTML / renderFields / update /（不提供 renderMsg → 不顯示 LINE 卡）
 // showPoster / getActivePosterEl / getDownloadFileName / onDownloadClone。
 // 另實作新版 index.html 的 step② 慣例：renderStep2 + STEP2_TITLE。
 //
@@ -815,18 +815,6 @@ function _renderPerfChart() {
 }
 
 // ============================================================
-// LINE 罐頭文字
-// ============================================================
-export function renderMsg(container) {
-  container.innerHTML = `
-    <div class="cs-cardhead"><div class="cs-num">4</div><div class="cs-cardtitle">LINE 罐頭文字</div></div>
-    <div class="msg-box" id="msgBox" style="white-space:pre-wrap">…</div>
-    <div class="btn-row" style="margin-top:10px">
-      <button class="btn btn-copy" onclick="copyMsg()">📋 複製文字</button>
-    </div>`;
-}
-
-// ============================================================
 // 更新海報內容（用 data- 屬性綁定）
 // ============================================================
 export function update() {
@@ -922,28 +910,10 @@ export function update() {
   _renderPerfChart();
   _renderMissing();
 
-  // LINE 文字
-  const mb = document.getElementById('msgBox');
-  if (mb) mb.textContent = _buildMsg(funds);
 }
 
 function esc(s) {
   return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-}
-
-function _buildMsg(funds) {
-  const names = funds.map(id => `▸ ${fundById(id)?.display_name_zh || ''}`).join('\n');
-  const lead = fundById(S.lead);
-  return `📊【${S.valueProp}】
-
-本次比較：
-${names}
-
-主打：${lead ? lead.display_name_zh : ''}
-
-詳情請見附圖 ⬇️
-
-＊本資料僅供參考，基金過去績效不代表未來表現，投資人申購前應詳閱公開說明書。`;
 }
 
 // ============================================================
